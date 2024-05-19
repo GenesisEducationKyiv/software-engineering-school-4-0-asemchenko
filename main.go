@@ -74,14 +74,14 @@ func initCron(emailService *service.EmailService,
 
 	cronInstance = cron.New()
 
-	_, err := cronInstance.AddFunc("@every 1m", func() {
+	_, err := cronInstance.AddFunc("@hourly", func() {
 		jobs.UpdateExchangeRateJob(currencyService)
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = cronInstance.AddFunc("@every 1m", func() {
+	_, err = cronInstance.AddFunc("@daily", func() {
 		jobs.SendEmailsJob(currencyService, subscriptionService, emailService)
 	})
 	if err != nil {
@@ -100,6 +100,8 @@ func initDb() error {
 	dbPassword := getEnv("DB_PASSWORD", "postgres")
 	dbName := getEnv("DB_NAME", "currency_notifier")
 	dbSSLMode := getEnv("DB_SSLMODE", "disable")
+
+	log.Printf("Connecting to database %s:%s as user %s to database %s\n", dbHost, dbPort, dbUser, dbName)
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser, dbPassword, dbHost, dbPort, dbName, dbSSLMode)
