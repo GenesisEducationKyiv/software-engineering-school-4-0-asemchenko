@@ -6,6 +6,16 @@ import (
 	"net/http"
 )
 
+type RateController struct {
+	service *service.CurrencyService
+}
+
+func NewRateController(service *service.CurrencyService) *RateController {
+	return &RateController{
+		service: service,
+	}
+}
+
 // GetRate returns the current USD to UAH exchange rate
 // @Summary Get the current USD to UAH exchange rate
 // @Description Request returns the current USD to UAH exchange rate using Monobank API
@@ -14,8 +24,8 @@ import (
 // @Success 200 {number} float64 "Current USD to UAH exchange rate"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /rate [get]
-func GetRate(w http.ResponseWriter, r *http.Request) {
-	rate, err := service.GetUSDtoUAHRate()
+func (c *RateController) GetRate(w http.ResponseWriter, r *http.Request) {
+	rate, err := c.service.GetUSDtoUAHRate()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return

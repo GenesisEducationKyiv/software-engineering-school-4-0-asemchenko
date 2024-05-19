@@ -31,3 +31,7 @@ func (s *SubscriptionService) Subscribe(email string) error {
 
 	return s.Repo.AddSubscription(subscription)
 }
+
+func (s *SubscriptionService) GetAllSubscriptions() ([]models.Subscription, error) {
+	return s.Repo.GetAllSubscriptions()
+}

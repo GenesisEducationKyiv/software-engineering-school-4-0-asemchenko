@@ -1,10 +1,12 @@
 package service
 
 import (
+	"currency-notifier/internal/repository"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bojanz/currency"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -26,46 +28,77 @@ type CurrencyRate struct {
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
-// TODO - create dedicated service struct
+type CurrencyService struct {
+	// Cache variables
+	cacheRate  float64
+	cacheTime  time.Time
+	cacheMutex sync.Mutex
+	// Dependencies
+	repo *repository.ExchangeRateRepository
+}
 
-// Cache variables
-var cacheRate float64
-var cacheTime time.Time
-var cacheMutex sync.Mutex
-
-func GetUSDtoUAHRate() (float64, error) {
-	if rate, ok := getCachedRate(); ok {
-		return rate, nil
+func NewCurrencyService(repo *repository.ExchangeRateRepository) *CurrencyService {
+	return &CurrencyService{
+		repo: repo,
 	}
+}
 
+func (s *CurrencyService) Init() error {
+	// TODO - implement calling API. If API call fails - init cache with latest rate from the database
+	return s.ReloadRate()
+}
+
+func (s *CurrencyService) ReloadRate() error {
+	_, err := s.reloadRate()
+
+	return err
+}
+
+func (s *CurrencyService) reloadRate() (float64, error) {
 	rate, err := fetchRateFromAPI()
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("USD to UAH rate: %f", rate)
 
-	updateCache(rate)
+	s.updateCache(rate)
+	err = s.repo.SaveRate(rate)
+	if err != nil {
+		return 0, err
+	}
+
+	log.Printf("USD to UAH rate saved to the database")
+
 	return rate, nil
+}
+
+func (s *CurrencyService) GetUSDtoUAHRate() (float64, error) {
+	if rate, ok := s.getCachedRate(); ok {
+		return rate, nil
+	}
+
+	return s.reloadRate()
 }
 
 func getCurrencyCode(currencyCode string) int {
 	code, ok := currency.GetNumericCode(currencyCode)
 	if !ok {
-		// TODO log here
+		log.Fatal("Currency code not found")
 	}
 	numericCode, err := strconv.Atoi(code)
 	if err != nil {
-		// TODO log here
+		log.Fatal("Currency code is not a number")
 	}
 
 	return numericCode
 }
 
-func getCachedRate() (float64, bool) {
-	cacheMutex.Lock()
-	defer cacheMutex.Unlock()
+func (s *CurrencyService) getCachedRate() (float64, bool) {
+	s.cacheMutex.Lock()
+	defer s.cacheMutex.Unlock()
 
-	if time.Since(cacheTime) < time.Hour {
-		return cacheRate, true
+	if time.Since(s.cacheTime) < time.Hour {
+		return s.cacheRate, true
 	}
 	return 0, false
 }
@@ -95,10 +128,10 @@ func fetchRateFromAPI() (float64, error) {
 	return 0, errors.New("USD to UAH rate not found")
 }
 
-func updateCache(rate float64) {
-	cacheMutex.Lock()
-	defer cacheMutex.Unlock()
+func (s *CurrencyService) updateCache(rate float64) {
+	s.cacheMutex.Lock()
+	defer s.cacheMutex.Unlock()
 
-	cacheRate = rate
-	cacheTime = time.Now()
+	s.cacheRate = rate
+	s.cacheTime = time.Now()
 }

@@ -3,6 +3,7 @@ package repository
 import (
 	"currency-notifier/internal/models"
 	"database/sql"
+	"log"
 )
 
 type SubscriptionRepository struct {
@@ -24,4 +25,28 @@ func (r *SubscriptionRepository) SubscriptionExists(email string) (bool, error) 
 	var exists bool
 	err := r.DB.QueryRow(query, email).Scan(&exists)
 	return exists, err
+}
+
+func (r *SubscriptionRepository) GetAllSubscriptions() ([]models.Subscription, error) {
+	rows, err := r.DB.Query("SELECT email, subscribed_at FROM subscriptions")
+	if err != nil {
+		log.Printf("Error fetching subscriptions: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subscriptions []models.Subscription
+	for rows.Next() {
+		var subscription models.Subscription
+		if err := rows.Scan(&subscription.Email, &subscription.SubscribedAt); err != nil {
+			log.Printf("Error scanning subscription: %v", err)
+			continue
+		}
+		subscriptions = append(subscriptions, subscription)
+	}
+	if err = rows.Err(); err != nil {
+		log.Printf("Error with rows in GetAllSubscriptions: %v", err)
+		return nil, err
+	}
+	return subscriptions, nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"currency-notifier/internal/controller"
+	"currency-notifier/internal/jobs"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/service"
 	"database/sql"
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/gorilla/mux"
+	"github.com/robfig/cron/v3"
 	"log"
 	"net/http"
 	"os"
@@ -21,6 +23,7 @@ import (
 )
 
 var db *sql.DB
+var cronInstance *cron.Cron
 
 // @title UAH currency application
 // @version 1.0
@@ -41,16 +44,51 @@ func main() {
 	defer db.Close()
 
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
+	rateRepository := repository.NewExchangeRateRepository(db)
+
+	emailService := service.NewEmailService()
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
+	currencyService := service.NewCurrencyService(rateRepository)
+
+	err = currencyService.Init()
+	if err != nil {
+		log.Fatal("Error initializing currency service: ", err)
+	}
+
 	subscriptionController := controller.NewSubscriptionController(subscriptionService)
+	rateController := controller.NewRateController(currencyService)
 
-	r.HandleFunc("/api/rate", controller.GetRate).Methods("GET")
+	r.HandleFunc("/api/rate", rateController.GetRate).Methods("GET")
 	r.HandleFunc("/api/subscribe", subscriptionController.Subscribe).Methods("POST")
-
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+	initCron(emailService, currencyService, subscriptionService)
 
 	log.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
+}
+
+func initCron(emailService *service.EmailService,
+	currencyService *service.CurrencyService,
+	subscriptionService *service.SubscriptionService) {
+
+	cronInstance = cron.New()
+
+	_, err := cronInstance.AddFunc("@every 1m", func() {
+		jobs.UpdateExchangeRateJob(currencyService)
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = cronInstance.AddFunc("@every 1m", func() {
+		jobs.SendEmailsJob(currencyService, subscriptionService, emailService)
+	})
+	if err != nil {
+		log.Fatal()
+	}
+
+	cronInstance.Start()
 }
 
 func initDb() error {
