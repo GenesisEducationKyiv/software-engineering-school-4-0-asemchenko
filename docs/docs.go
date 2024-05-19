@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/rate": {
             "get": {
-                "description": "Request returns the current USD to UAH exchange rate using a third-party API",
+                "description": "Request returns the current USD to UAH exchange rate using Monobank API",
                 "produces": [
                     "application/json"
                 ],
@@ -30,6 +30,12 @@ const docTemplate = `{
                         "description": "Current USD to UAH exchange rate",
                         "schema": {
                             "type": "number"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }

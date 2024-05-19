@@ -22,8 +22,8 @@ func main() {
 	r := mux.NewRouter()
 
 	// Маршруты для контроллеров
-	r.HandleFunc("/api/v1/rate", controller.GetRate).Methods("GET")
-	r.HandleFunc("/api/v1/subscribe", controller.Subscribe).Methods("POST")
+	r.HandleFunc("/api/rate", controller.GetRate).Methods("GET")
+	r.HandleFunc("/api/subscribe", controller.Subscribe).Methods("POST")
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
