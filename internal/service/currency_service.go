@@ -26,6 +26,8 @@ type CurrencyRate struct {
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
+// TODO - create dedicated service struct
+
 // Cache variables
 var cacheRate float64
 var cacheTime time.Time

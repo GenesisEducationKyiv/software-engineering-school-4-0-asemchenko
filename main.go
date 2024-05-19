@@ -2,6 +2,8 @@ package main
 
 import (
 	"currency-notifier/internal/controller"
+	"currency-notifier/internal/repository"
+	"currency-notifier/internal/service"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -31,11 +33,19 @@ var db *sql.DB
 func main() {
 	r := mux.NewRouter()
 
-	initDb()
+	err := initDb()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Маршруты для контроллеров
+	defer db.Close()
+
+	subscriptionRepo := repository.NewSubscriptionRepository(db)
+	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
+	subscriptionController := controller.NewSubscriptionController(subscriptionService)
+
 	r.HandleFunc("/api/rate", controller.GetRate).Methods("GET")
-	r.HandleFunc("/api/subscribe", controller.Subscribe).Methods("POST")
+	r.HandleFunc("/api/subscribe", subscriptionController.Subscribe).Methods("POST")
 
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
@@ -43,7 +53,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
-func initDb() {
+func initDb() error {
 	// If no env variables - assume it's 'local' environment and use default values
 
 	dbHost := getEnv("DB_HOST", "localhost")
@@ -59,14 +69,12 @@ func initDb() {
 	var err error
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer db.Close()
 
 	err = runMigrations(db)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	return err
 }
 
 func getEnv(key, defaultValue string) string {
