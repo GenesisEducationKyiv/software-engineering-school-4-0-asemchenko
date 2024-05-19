@@ -1,0 +1,49 @@
+basePath: /api
+host: localhost:8080
+info:
+  contact: {}
+  description: API for current USD-UAH exchange rate and for email-subscribing on
+    the currency rate
+  title: UAH currency application
+  version: "1.0"
+paths:
+  /rate:
+    get:
+      description: Request returns the current USD to UAH exchange rate using a third-party
+        API
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Current USD to UAH exchange rate
+          schema:
+            type: number
+      summary: Get the current USD to UAH exchange rate
+      tags:
+      - rate
+  /subscribe:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Request adds a new email to receive USD to UAH exchange rate updates
+      parameters:
+      - description: Email address
+        in: formData
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Email added
+          schema:
+            type: string
+        "409":
+          description: Return if email already exists in the database
+          schema:
+            type: string
+      summary: Subscribe to rate change notifications
+      tags:
+      - subscription
+swagger: "2.0"
