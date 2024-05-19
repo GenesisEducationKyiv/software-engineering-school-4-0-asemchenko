@@ -12,6 +12,12 @@ Basically there are:
 I find it not a good idea to store secrets in the repository, so I decided to just left
 placeholders in the `.env` file.
 
+I will provide them to you in a secure way (add a link to the file).
+
+If you didn't receive them, feel free to contact me at my email.
+
+```bash
+
 Like this:
 
 ```env
