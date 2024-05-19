@@ -3,11 +3,11 @@
 Firstly you need to fill some secrets in the `.env` file.
 Basically there are:
 
-1) SMTP_HOST - the host of the SMTP server
-1) SMTP_PORT - the port of the SMTP server
-1) SMTP_USERNAME - the username of the SMTP server
-1) SMTP_PASSWORD - the password of the SMTP server
-1) SMTP_FROM_EMAIL - the email from which the service will send emails
+1) `SMTP_HOST` - the host of the SMTP server
+1) `SMTP_PORT` - the port of the SMTP server
+1) `SMTP_USERNAME` - the username of the SMTP server
+1) `SMTP_PASSWORD` - the password of the SMTP server
+1) `SMTP_FROM_EMAIL` - the email from which the service will send emails
 
 I find it not a good idea to store secrets in the repository, so I decided to just left
 placeholders in the `.env` file.
