@@ -44,7 +44,6 @@ func NewCurrencyService(repo *repository.ExchangeRateRepository) *CurrencyServic
 }
 
 func (s *CurrencyService) Init() error {
-	// TODO - implement calling API. If API call fails - init cache with latest rate from the database
 	return s.ReloadRate()
 }
 
