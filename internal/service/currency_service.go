@@ -7,6 +7,8 @@ import (
 	"github.com/bojanz/currency"
 	"net/http"
 	"strconv"
+	"sync"
+	"time"
 )
 
 const monobankAPI = "https://api.monobank.ua/bank/currency"
@@ -24,7 +26,49 @@ type CurrencyRate struct {
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
+// Cache variables
+var cacheRate float64
+var cacheTime time.Time
+var cacheMutex sync.Mutex
+
 func GetUSDtoUAHRate() (float64, error) {
+	if rate, ok := getCachedRate(); ok {
+		return rate, nil
+	}
+
+	rate, err := fetchRateFromAPI()
+	if err != nil {
+		return 0, err
+	}
+
+	updateCache(rate)
+	return rate, nil
+}
+
+func getCurrencyCode(currencyCode string) int {
+	code, ok := currency.GetNumericCode(currencyCode)
+	if !ok {
+		// TODO log here
+	}
+	numericCode, err := strconv.Atoi(code)
+	if err != nil {
+		// TODO log here
+	}
+
+	return numericCode
+}
+
+func getCachedRate() (float64, bool) {
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
+
+	if time.Since(cacheTime) < time.Hour {
+		return cacheRate, true
+	}
+	return 0, false
+}
+
+func fetchRateFromAPI() (float64, error) {
 	resp, err := http.Get(monobankAPI)
 	if err != nil {
 		return 0, err
@@ -49,15 +93,10 @@ func GetUSDtoUAHRate() (float64, error) {
 	return 0, errors.New("USD to UAH rate not found")
 }
 
-func getCurrencyCode(currencyCode string) int {
-	code, ok := currency.GetNumericCode(currencyCode)
-	if ok != true {
-		// TODO log here
-	}
-	numericCode, err := strconv.Atoi(code)
-	if err != nil {
-		// TODO log here
-	}
+func updateCache(rate float64) {
+	cacheMutex.Lock()
+	defer cacheMutex.Unlock()
 
-	return numericCode
+	cacheRate = rate
+	cacheTime = time.Now()
 }
