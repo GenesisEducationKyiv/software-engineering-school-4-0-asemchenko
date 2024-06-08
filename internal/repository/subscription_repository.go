@@ -33,12 +33,17 @@ func (r *SubscriptionRepository) GetAllSubscriptions() ([]models.Subscription, e
 		log.Printf("Error fetching subscriptions: %v", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(rows)
 
 	var subscriptions []models.Subscription
 	for rows.Next() {
 		var subscription models.Subscription
-		if err := rows.Scan(&subscription.Email, &subscription.SubscribedAt); err != nil {
+		if err = rows.Scan(&subscription.Email, &subscription.SubscribedAt); err != nil {
 			log.Printf("Error scanning subscription: %v", err)
 			continue
 		}
