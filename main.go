@@ -41,7 +41,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err = db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(db)
 
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
 	rateRepository := repository.NewExchangeRateRepository(db)
