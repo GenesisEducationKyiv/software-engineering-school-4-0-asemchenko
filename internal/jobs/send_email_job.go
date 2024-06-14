@@ -61,9 +61,9 @@ func (j SendEmailJob) sendRatesToActiveSubscribers(subscriptions *[]models.Subsc
 	for _, subscription := range *subscriptions {
 		err := j.emailService.SendCurrencyRateEmail(subscription.Email, rate)
 		if err != nil {
-			log.Printf("Error sending email to %j: %v", subscription.Email, err)
+			log.Printf("Error sending email to %s: %v", subscription.Email, err)
 		} else {
-			log.Printf("Email sent to %j", subscription.Email)
+			log.Printf("Email sent to %s", subscription.Email)
 		}
 	}
 	log.Printf("Emails sent")

@@ -19,8 +19,8 @@ type DbConfig struct {
 }
 
 type Db struct {
-	config DbConfig
 	db     *sql.DB
+	config DbConfig
 }
 
 func NewDb(config DbConfig) *Db {
