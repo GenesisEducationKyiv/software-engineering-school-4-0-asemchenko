@@ -55,6 +55,9 @@ func main() {
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo)
 	currencyService := service.NewCurrencyService(rateRepository)
 
+	sendEmailJob := jobs.NewEmailSender(currencyService, subscriptionService, emailService)
+	updateRateJob := jobs.NewUpdateRateJob(currencyService)
+
 	err = currencyService.Init()
 	if err != nil {
 		log.Fatal("Error initializing currency service: ", err)
@@ -67,28 +70,21 @@ func main() {
 	r.HandleFunc("/api/subscribe", subscriptionController.Subscribe).Methods("POST")
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	initCron(emailService, currencyService, subscriptionService)
+	initCron(sendEmailJob, updateRateJob)
 
 	log.Println("Server started at :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
-func initCron(emailService *service.EmailService,
-	currencyService *service.CurrencyService,
-	subscriptionService *service.SubscriptionService) {
-
+func initCron(sendEmailJob *jobs.SendEmailJob, updateRateJob *jobs.UpdateRateJob) {
 	cronInstance = cron.New()
 
-	_, err := cronInstance.AddFunc("@hourly", func() {
-		jobs.UpdateExchangeRateJob(currencyService)
-	})
+	_, err := cronInstance.AddFunc("@hourly", updateRateJob.UpdateExchangeRate)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = cronInstance.AddFunc("@daily", func() {
-		jobs.SendEmailsJob(currencyService, subscriptionService, emailService)
-	})
+	_, err = cronInstance.AddFunc("@daily", sendEmailJob.SendEmails)
 	if err != nil {
 		log.Fatal()
 	}
