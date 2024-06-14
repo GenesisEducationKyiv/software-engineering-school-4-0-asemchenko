@@ -2,7 +2,7 @@ package main
 
 import (
 	_ "currency-notifier/docs"
-	"currency-notifier/internal"
+	"currency-notifier/internal/context"
 	"currency-notifier/internal/controller"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -22,7 +22,7 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	appCtx := internal.NewAppContext()
+	appCtx := context.NewAppContext()
 
 	appCtx.Init()
 	defer appCtx.Close()
