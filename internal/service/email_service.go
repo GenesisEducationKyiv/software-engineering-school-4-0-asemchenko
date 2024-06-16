@@ -8,8 +8,19 @@ import (
 )
 
 type EmailService struct {
-	Dialer *gomail.Dialer
+	Dialer Dialer
 	From   string
+}
+
+type Dialer interface {
+	DialAndSend(m ...*gomail.Message) error
+}
+
+func NewWithDialer(dialer Dialer, from string) *EmailService {
+	return &EmailService{
+		Dialer: dialer,
+		From:   from,
+	}
 }
 
 func NewEmailService() *EmailService {
@@ -37,10 +48,10 @@ func (s *EmailService) SendCurrencyRateEmail(to string, rate float64) error {
 	plainTextContent := fmt.Sprintf("The current USD to UAH rate is %.2f.", rate)
 	htmlContent := fmt.Sprintf("<strong>The current USD to UAH rate is %.2f.</strong>", rate)
 
-	return s.SendEmail(to, subject, plainTextContent, htmlContent)
+	return s.sendEmail(to, subject, plainTextContent, htmlContent)
 }
 
-func (s *EmailService) SendEmail(to string, subject string, plainTextContent string, htmlContent string) error {
+func (s *EmailService) sendEmail(to string, subject string, plainTextContent string, htmlContent string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.From)
 	m.SetHeader("To", to)
