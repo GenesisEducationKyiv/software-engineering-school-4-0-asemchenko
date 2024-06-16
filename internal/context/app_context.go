@@ -16,6 +16,8 @@ type AppContext struct {
 	SubscriptionRepo *repository.SubscriptionRepository
 	RateRepository   *repository.ExchangeRateRepository
 
+	MonobankRateProvider *service.MonobankRateProvider
+
 	EmailService        *service.EmailService
 	SubscriptionService *service.SubscriptionService
 	CurrencyService     *service.CurrencyService
@@ -35,9 +37,11 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 
+	ctx.MonobankRateProvider = &service.MonobankRateProvider{}
+
 	ctx.EmailService = service.NewEmailService()
 	ctx.SubscriptionService = service.NewSubscriptionService(ctx.SubscriptionRepo)
-	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository)
+	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.MonobankRateProvider)
 
 	ctx.SendEmailJob = jobs.NewEmailSender(ctx.CurrencyService, ctx.SubscriptionService, ctx.EmailService)
 	ctx.UpdateRateJob = jobs.NewUpdateRateJob(ctx.CurrencyService)
