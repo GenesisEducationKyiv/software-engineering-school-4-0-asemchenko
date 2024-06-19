@@ -31,5 +31,5 @@ func (c *RateController) GetRate(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	util.RespondJSON(&w, http.StatusOK, rate)
+	util.RespondJSON(w, http.StatusOK, rate)
 }

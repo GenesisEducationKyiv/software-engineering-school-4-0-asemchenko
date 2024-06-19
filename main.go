@@ -3,13 +3,12 @@ package main
 import (
 	_ "currency-notifier/docs"
 	"currency-notifier/internal/context"
-	"currency-notifier/internal/controller"
-	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger"
-	"log"
-	"net/http"
-
+	"currency-notifier/internal/server"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // @title UAH currency application
@@ -21,19 +20,19 @@ import (
 //go:generate go run github.com/swaggo/swag/cmd/swag init
 
 func main() {
-	r := mux.NewRouter()
 	appCtx := context.NewAppContext()
 
 	appCtx.Init()
-	defer appCtx.Close()
 
-	subscriptionController := controller.NewSubscriptionController(appCtx.SubscriptionService)
-	rateController := controller.NewRateController(appCtx.CurrencyService)
+	s := server.NewServer(appCtx)
+	s.RegisterRoutes()
+	go s.StartListening()
 
-	r.HandleFunc("/api/rate", rateController.GetRate).Methods("GET")
-	r.HandleFunc("/api/subscribe", subscriptionController.Subscribe).Methods("POST")
-	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	// graceful shutdown
+	finish := make(chan os.Signal, 1)
+	signal.Notify(finish, os.Interrupt, syscall.SIGTERM)
 
-	log.Println("Server started at :8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	<-finish
+	log.Printf("Shutting down the server...")
+	appCtx.Close()
 }
