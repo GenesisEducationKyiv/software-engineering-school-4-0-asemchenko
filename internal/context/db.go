@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"log"
 )
 
@@ -66,7 +67,7 @@ func (d *Db) migrate() error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://db/migrations",
+		"file://../../db/migrations",
 		"postgres", driver)
 	if err != nil {
 		return fmt.Errorf("could not start migration: %w", err)

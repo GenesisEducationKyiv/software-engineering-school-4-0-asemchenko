@@ -15,10 +15,18 @@ import (
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
-type MonobankRateProvider struct{}
+type MonobankRateProvider struct {
+	monobankHostUrl string
+}
+
+func NewMonobankRateProvider(monobankHostUrl string) *MonobankRateProvider {
+	return &MonobankRateProvider{
+		monobankHostUrl: monobankHostUrl,
+	}
+}
 
 func (p *MonobankRateProvider) FetchRateFromAPI() (float64, error) {
-	resp, err := http.Get(monobankAPI)
+	resp, err := http.Get(p.monobankHostUrl + "/bank/currency")
 	if err != nil {
 		return 0, err
 	}

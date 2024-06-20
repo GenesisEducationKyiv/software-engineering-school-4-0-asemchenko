@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const monobankAPI = "https://api.monobank.ua/bank/currency"
-
 type CurrencyRate struct {
 	CurrencyCodeA int     `json:"currencyCodeA"`
 	CurrencyCodeB int     `json:"currencyCodeB"`

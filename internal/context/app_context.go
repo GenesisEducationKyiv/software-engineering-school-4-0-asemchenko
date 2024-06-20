@@ -37,7 +37,7 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 
-	ctx.MonobankRateProvider = &service.MonobankRateProvider{}
+	ctx.MonobankRateProvider = service.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua/bank/currency"))
 
 	ctx.EmailService = service.NewEmailService()
 	ctx.SubscriptionService = service.NewSubscriptionService(ctx.SubscriptionRepo)
