@@ -34,10 +34,10 @@ func (c *SubscriptionController) Subscribe(w http.ResponseWriter, r *http.Reques
 	}
 
 	err := c.Service.Subscribe(email)
-	renderSubscriptionResponse(&w, &err)
+	renderSubscriptionResponse(w, &err)
 }
 
-func renderSubscriptionResponse(w *http.ResponseWriter, subscribeError *error) {
+func renderSubscriptionResponse(w http.ResponseWriter, subscribeError *error) {
 	if subscribeError != nil {
 		if errors.Is(*subscribeError, exceptions.ErrEmailAlreadySubscribed) {
 			util.RespondJSON(w, http.StatusConflict, map[string]string{"message": "Email already subscribed"})
