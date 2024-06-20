@@ -1,13 +1,10 @@
 package service
 
 import (
-	"currency-notifier/internal/repository"
 	"currency-notifier/internal/util"
 	"log"
 	"time"
 )
-
-const monobankAPI = "https://api.monobank.ua/bank/currency"
 
 type CurrencyRate struct {
 	CurrencyCodeA int     `json:"currencyCodeA"`
@@ -19,14 +16,25 @@ type CurrencyRate struct {
 }
 
 type CurrencyService struct {
-	repo       *repository.ExchangeRateRepository
-	latestRate *util.InMemoryCache[float64]
+	repo         ExchangeRateRepo
+	rateProvider RateProvider
+	latestRate   *util.InMemoryCache[float64]
 }
 
-func NewCurrencyService(repo *repository.ExchangeRateRepository) *CurrencyService {
+type ExchangeRateRepo interface {
+	SaveRate(rate float64) error
+	GetLatestRate() (float64, error)
+}
+
+type RateProvider interface {
+	FetchRateFromAPI() (float64, error)
+}
+
+func NewCurrencyService(repo ExchangeRateRepo, rateProvider RateProvider) *CurrencyService {
 	return &CurrencyService{
-		repo:       repo,
-		latestRate: util.NewInMemoryCache[float64](time.Hour),
+		repo:         repo,
+		rateProvider: rateProvider,
+		latestRate:   util.NewInMemoryCache[float64](time.Hour),
 	}
 }
 func (s *CurrencyService) Init() error {
@@ -39,7 +47,7 @@ func (s *CurrencyService) ReloadRate() error {
 }
 
 func (s *CurrencyService) reloadRate() (float64, error) {
-	rate, err := fetchRateFromAPI()
+	rate, err := s.rateProvider.FetchRateFromAPI()
 	if err != nil {
 		return 0, err
 	}

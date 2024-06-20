@@ -21,6 +21,10 @@ func NewServer(ctx *context.AppContext) *Server {
 	}
 }
 
+func (s *Server) GetRouter() *mux.Router {
+	return s.router
+}
+
 func (s *Server) RegisterRoutes() {
 	subscriptionController := controller.NewSubscriptionController(s.ctx.SubscriptionService)
 	rateController := controller.NewRateController(s.ctx.CurrencyService)
