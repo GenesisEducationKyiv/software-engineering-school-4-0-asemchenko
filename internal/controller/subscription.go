@@ -34,8 +34,12 @@ func (c *SubscriptionController) Subscribe(w http.ResponseWriter, r *http.Reques
 	}
 
 	err := c.Service.Subscribe(email)
-	if err != nil {
-		if errors.Is(err, exceptions.ErrEmailAlreadySubscribed) {
+	renderSubscriptionResponse(w, &err)
+}
+
+func renderSubscriptionResponse(w http.ResponseWriter, subscribeError *error) {
+	if subscribeError != nil {
+		if errors.Is(*subscribeError, exceptions.ErrEmailAlreadySubscribed) {
 			util.RespondJSON(w, http.StatusConflict, map[string]string{"message": "Email already subscribed"})
 		} else {
 			util.RespondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Internal server error"})
@@ -43,6 +47,5 @@ func (c *SubscriptionController) Subscribe(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	util.RespondJSON(w, http.StatusOK, map[string]string{"message": "Subscription successful"})
 }

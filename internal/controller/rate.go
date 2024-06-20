@@ -2,7 +2,7 @@ package controller
 
 import (
 	"currency-notifier/internal/service"
-	"encoding/json"
+	"currency-notifier/internal/util"
 	"net/http"
 )
 
@@ -31,9 +31,5 @@ func (c *RateController) GetRate(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(rate)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	util.RespondJSON(w, http.StatusOK, rate)
 }
