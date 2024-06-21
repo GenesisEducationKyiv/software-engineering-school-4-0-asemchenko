@@ -1,0 +1,52 @@
+package nbu
+
+import (
+	"currency-notifier/internal/service"
+	"currency-notifier/internal/util"
+	"encoding/json"
+	"errors"
+	"net/http"
+)
+
+type rateProvider struct {
+	nbuHostUrl string
+}
+
+func NewNbuRateProvider(nbuHostUrl string) service.RateProvider {
+	return &rateProvider{
+		nbuHostUrl: nbuHostUrl,
+	}
+}
+
+type nbuRateExchange struct {
+	R030         int     `json:"r030"`
+	Text         string  `json:"txt"`
+	Rate         float64 `json:"rate"`
+	CurrencyCode string  `json:"cc"`
+	ExchangeDate string  `json:"exchangedate"`
+}
+
+func (p *rateProvider) FetchRateFromAPI() (float64, error) {
+	resp, err := http.Get(p.nbuHostUrl + "/NBUStatService/v1/statdirectory/exchange?json")
+	if err != nil {
+		return 0, err
+	}
+	defer util.CloseBodyWithErrorHandling(resp.Body)
+
+	var rates []nbuRateExchange
+	err = json.NewDecoder(resp.Body).Decode(&rates)
+	if err != nil {
+		return 0, err
+	}
+
+	return findNbuUsdRate(rates)
+}
+
+func findNbuUsdRate(rates []nbuRateExchange) (float64, error) {
+	for _, rate := range rates {
+		if rate.CurrencyCode == "USD" {
+			return rate.Rate, nil
+		}
+	}
+	return 0, errors.New("USD to UAH rate not found")
+}
