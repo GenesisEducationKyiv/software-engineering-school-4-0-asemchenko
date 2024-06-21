@@ -1,6 +1,7 @@
 package monobank
 
 import (
+	"currency-notifier/internal/service"
 	"currency-notifier/internal/util"
 	"encoding/json"
 	"errors"
@@ -24,17 +25,17 @@ type currencyRate struct {
 	RateCross     float64 `json:"rateCross,omitempty"`
 }
 
-type RateProvider struct {
+type rateProvider struct {
 	monobankHostUrl string
 }
 
-func NewMonobankRateProvider(monobankHostUrl string) *RateProvider {
-	return &RateProvider{
+func NewMonobankRateProvider(monobankHostUrl string) service.RateProvider {
+	return &rateProvider{
 		monobankHostUrl: monobankHostUrl,
 	}
 }
 
-func (p *RateProvider) FetchRateFromAPI() (float64, error) {
+func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	resp, err := http.Get(p.monobankHostUrl + "/bank/currency")
 	if err != nil {
 		return 0, err

@@ -1,18 +1,19 @@
 package privatbank
 
 import (
+	"currency-notifier/internal/service"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 )
 
-type RateProvider struct {
+type rateProvider struct {
 	privatBankHostUrl string
 }
 
-func NewPrivatBankRateProvider(privatBankHostUrl string) *RateProvider {
-	return &RateProvider{
+func NewPrivatBankRateProvider(privatBankHostUrl string) service.RateProvider {
+	return &rateProvider{
 		privatBankHostUrl: privatBankHostUrl,
 	}
 }
@@ -24,7 +25,7 @@ type exchangeRate struct {
 	SaleRate     string `json:"sale"`
 }
 
-func (p *RateProvider) FetchRateFromAPI() (float64, error) {
+func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	resp, err := http.Get(p.privatBankHostUrl + "/p24api/pubinfo?exchange&coursid=11")
 	if err != nil {
 		return 0, err
