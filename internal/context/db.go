@@ -1,6 +1,7 @@
 package context
 
 import (
+	"currency-notifier/internal/util"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -67,7 +68,7 @@ func (d *Db) migrate() error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		"file://../../db/migrations",
+		util.GetEnv("MIGRATIONS_PATH", "file://./db/migrations"),
 		"postgres", driver)
 	if err != nil {
 		return fmt.Errorf("could not start migration: %w", err)

@@ -8,9 +8,9 @@ import (
 	"currency-notifier/internal/service/rate_provider/monobank"
 	"currency-notifier/internal/service/rate_provider/nbu"
 	"currency-notifier/internal/service/rate_provider/privatbank"
+	"currency-notifier/internal/util"
 	"github.com/robfig/cron/v3"
 	"log"
-	"os"
 )
 
 type AppContext struct {
@@ -45,9 +45,9 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 
-	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
-	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(getEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
-	ctx.NbuRateProvider = nbu.NewNbuRateProvider(getEnv("NBU_HOST_URL", "https://bank.gov.ua"))
+	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
+	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
+	ctx.NbuRateProvider = nbu.NewNbuRateProvider(util.GetEnv("NBU_HOST_URL", "https://bank.gov.ua"))
 
 	ctx.AggregatedRateProvider = rate_provider.NewAggregatedRateProvider(
 		ctx.MonobankRateProvider,
@@ -91,21 +91,13 @@ func (ctx *AppContext) initCron() {
 	ctx.cronInstance.Start()
 }
 
-func getEnv(key, defaultValue string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists {
-		return defaultValue
-	}
-	return value
-}
-
 func getDbConfig() DbConfig {
 	return DbConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "postgres"),
-		Name:     getEnv("DB_NAME", "currency_notifier"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
+		Host:     util.GetEnv("DB_HOST", "localhost"),
+		Port:     util.GetEnv("DB_PORT", "5432"),
+		User:     util.GetEnv("DB_USER", "postgres"),
+		Password: util.GetEnv("DB_PASSWORD", "postgres"),
+		Name:     util.GetEnv("DB_NAME", "currency_notifier"),
+		SSLMode:  util.GetEnv("DB_SSLMODE", "disable"),
 	}
 }
