@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+//go:generate mockgen -source=./rate_provider/rate_provider.go -destination=../mocks/rate_provider.go -package=mocks
 //go:generate mockgen -source=./currency_service.go -destination=../mocks/currency_service.go -package=mocks
 
 func TestCurrencyService_GetUSDtoUAHRate_whenNoCachedValue_shouldLoadAndSaveRate(t *testing.T) {
