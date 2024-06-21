@@ -20,11 +20,11 @@ func NewNbuRateProvider(nbuHostUrl string) rate_provider.RateProvider {
 }
 
 type nbuRateExchange struct {
-	R030         int     `json:"r030"`
 	Text         string  `json:"txt"`
-	Rate         float64 `json:"rate"`
 	CurrencyCode string  `json:"cc"`
 	ExchangeDate string  `json:"exchangedate"`
+	Rate         float64 `json:"rate"`
+	R030         int     `json:"r030"`
 }
 
 func (p *rateProvider) FetchRateFromAPI() (float64, error) {
