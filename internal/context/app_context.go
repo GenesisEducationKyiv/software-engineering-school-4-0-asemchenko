@@ -4,6 +4,7 @@ import (
 	"currency-notifier/internal/jobs"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/service"
+	"currency-notifier/internal/service/rate_provider/monobank"
 	"github.com/robfig/cron/v3"
 	"log"
 	"os"
@@ -16,7 +17,7 @@ type AppContext struct {
 	SubscriptionRepo *repository.SubscriptionRepository
 	RateRepository   *repository.ExchangeRateRepository
 
-	MonobankRateProvider *service.MonobankRateProvider
+	MonobankRateProvider service.RateProvider
 
 	EmailService        *service.EmailService
 	SubscriptionService *service.SubscriptionService
@@ -37,7 +38,7 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 
-	ctx.MonobankRateProvider = service.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua/bank/currency"))
+	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua/bank/currency"))
 
 	ctx.EmailService = service.NewEmailService()
 	ctx.SubscriptionService = service.NewSubscriptionService(ctx.SubscriptionRepo)

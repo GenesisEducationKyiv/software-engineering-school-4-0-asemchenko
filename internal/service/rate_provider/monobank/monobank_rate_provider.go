@@ -1,6 +1,7 @@
-package service
+package monobank
 
 import (
+	"currency-notifier/internal/service"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,17 +16,17 @@ import (
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
-type MonobankRateProvider struct {
+type RateProvider struct {
 	monobankHostUrl string
 }
 
-func NewMonobankRateProvider(monobankHostUrl string) *MonobankRateProvider {
-	return &MonobankRateProvider{
+func NewMonobankRateProvider(monobankHostUrl string) *RateProvider {
+	return &RateProvider{
 		monobankHostUrl: monobankHostUrl,
 	}
 }
 
-func (p *MonobankRateProvider) FetchRateFromAPI() (float64, error) {
+func (p *RateProvider) FetchRateFromAPI() (float64, error) {
 	resp, err := http.Get(p.monobankHostUrl + "/bank/currency")
 	if err != nil {
 		return 0, err
@@ -40,12 +41,12 @@ func (p *MonobankRateProvider) FetchRateFromAPI() (float64, error) {
 	return findUahRate(rates)
 }
 
-func extractRates(resp *http.Response) ([]CurrencyRate, error) {
+func extractRates(resp *http.Response) ([]service.CurrencyRate, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var rates []CurrencyRate
+	var rates []service.CurrencyRate
 	if err := json.NewDecoder(resp.Body).Decode(&rates); err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func closeBody(Body io.ReadCloser) {
 	}
 }
 
-func findUahRate(rates []CurrencyRate) (float64, error) {
+func findUahRate(rates []service.CurrencyRate) (float64, error) {
 	for _, rate := range rates {
 		if rate.CurrencyCodeA == usdCode && rate.CurrencyCodeB == uahCode {
 			return rate.RateSell, nil
