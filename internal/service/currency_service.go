@@ -6,15 +6,6 @@ import (
 	"time"
 )
 
-type CurrencyRate struct {
-	CurrencyCodeA int     `json:"currencyCodeA"`
-	CurrencyCodeB int     `json:"currencyCodeB"`
-	Date          int64   `json:"date"`
-	RateSell      float64 `json:"rateSell,omitempty"`
-	RateBuy       float64 `json:"rateBuy,omitempty"`
-	RateCross     float64 `json:"rateCross,omitempty"`
-}
-
 type CurrencyService struct {
 	repo         ExchangeRateRepo
 	rateProvider RateProvider
