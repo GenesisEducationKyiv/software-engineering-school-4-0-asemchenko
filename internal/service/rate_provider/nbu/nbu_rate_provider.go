@@ -1,10 +1,11 @@
 package nbu
 
 import (
-	"currency-notifier/internal/service"
+	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/util"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ type rateProvider struct {
 	nbuHostUrl string
 }
 
-func NewNbuRateProvider(nbuHostUrl string) service.RateProvider {
+func NewNbuRateProvider(nbuHostUrl string) rate_provider.RateProvider {
 	return &rateProvider{
 		nbuHostUrl: nbuHostUrl,
 	}
@@ -38,8 +39,13 @@ func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("nbu rates: %v", rates)
 
 	return findNbuUsdRate(rates)
+}
+
+func (p *rateProvider) GetName() string {
+	return "nbu-rate-provider"
 }
 
 func findNbuUsdRate(rates []nbuRateExchange) (float64, error) {

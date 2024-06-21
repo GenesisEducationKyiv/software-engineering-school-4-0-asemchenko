@@ -1,9 +1,10 @@
 package privatbank
 
 import (
-	"currency-notifier/internal/service"
+	"currency-notifier/internal/service/rate_provider"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -12,7 +13,7 @@ type rateProvider struct {
 	privatBankHostUrl string
 }
 
-func NewPrivatBankRateProvider(privatBankHostUrl string) service.RateProvider {
+func NewPrivatBankRateProvider(privatBankHostUrl string) rate_provider.RateProvider {
 	return &rateProvider{
 		privatBankHostUrl: privatBankHostUrl,
 	}
@@ -37,8 +38,13 @@ func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+	log.Printf("privatbank rates: %v", rates)
 
 	return findUahRate(rates)
+}
+
+func (p *rateProvider) GetName() string {
+	return "privat-bank-rate-provider"
 }
 
 func findUahRate(rates []exchangeRate) (float64, error) {

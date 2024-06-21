@@ -1,6 +1,7 @@
 package service
 
 import (
+	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/util"
 	"log"
 	"time"
@@ -8,7 +9,7 @@ import (
 
 type CurrencyService struct {
 	repo         ExchangeRateRepo
-	rateProvider RateProvider
+	rateProvider rate_provider.RateProvider
 	latestRate   *util.InMemoryCache[float64]
 }
 
@@ -17,11 +18,7 @@ type ExchangeRateRepo interface {
 	GetLatestRate() (float64, error)
 }
 
-type RateProvider interface {
-	FetchRateFromAPI() (float64, error)
-}
-
-func NewCurrencyService(repo ExchangeRateRepo, rateProvider RateProvider) *CurrencyService {
+func NewCurrencyService(repo ExchangeRateRepo, rateProvider rate_provider.RateProvider) *CurrencyService {
 	return &CurrencyService{
 		repo:         repo,
 		rateProvider: rateProvider,

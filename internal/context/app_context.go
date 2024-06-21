@@ -4,7 +4,10 @@ import (
 	"currency-notifier/internal/jobs"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/service"
+	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/service/rate_provider/monobank"
+	"currency-notifier/internal/service/rate_provider/nbu"
+	"currency-notifier/internal/service/rate_provider/privatbank"
 	"github.com/robfig/cron/v3"
 	"log"
 	"os"
@@ -17,7 +20,11 @@ type AppContext struct {
 	SubscriptionRepo *repository.SubscriptionRepository
 	RateRepository   *repository.ExchangeRateRepository
 
-	MonobankRateProvider service.RateProvider
+	MonobankRateProvider   rate_provider.RateProvider
+	PrivatBankRateProvider rate_provider.RateProvider
+	NbuRateProvider        rate_provider.RateProvider
+
+	AggregatedRateProvider rate_provider.RateProvider
 
 	EmailService        *service.EmailService
 	SubscriptionService *service.SubscriptionService
@@ -38,11 +45,19 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 
-	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua/bank/currency"))
+	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(getEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
+	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(getEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
+	ctx.NbuRateProvider = nbu.NewNbuRateProvider(getEnv("NBU_HOST_URL", "https://bank.gov.ua"))
+
+	ctx.AggregatedRateProvider = rate_provider.NewAggregatedRateProvider(
+		ctx.MonobankRateProvider,
+		ctx.PrivatBankRateProvider,
+		ctx.NbuRateProvider,
+	)
 
 	ctx.EmailService = service.NewEmailService()
 	ctx.SubscriptionService = service.NewSubscriptionService(ctx.SubscriptionRepo)
-	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.MonobankRateProvider)
+	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.AggregatedRateProvider)
 
 	ctx.SendEmailJob = jobs.NewEmailSender(ctx.CurrencyService, ctx.SubscriptionService, ctx.EmailService)
 	ctx.UpdateRateJob = jobs.NewUpdateRateJob(ctx.CurrencyService)

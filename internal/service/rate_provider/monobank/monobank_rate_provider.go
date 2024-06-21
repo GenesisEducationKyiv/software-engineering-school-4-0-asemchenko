@@ -1,7 +1,7 @@
 package monobank
 
 import (
-	"currency-notifier/internal/service"
+	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/util"
 	"encoding/json"
 	"errors"
@@ -29,7 +29,7 @@ type rateProvider struct {
 	monobankHostUrl string
 }
 
-func NewMonobankRateProvider(monobankHostUrl string) service.RateProvider {
+func NewMonobankRateProvider(monobankHostUrl string) rate_provider.RateProvider {
 	return &rateProvider{
 		monobankHostUrl: monobankHostUrl,
 	}
@@ -50,6 +50,10 @@ func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	return findUahRate(rates)
 }
 
+func (p *rateProvider) GetName() string {
+	return "monobank-rate-provider"
+}
+
 func extractRates(resp *http.Response) ([]currencyRate, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -59,6 +63,7 @@ func extractRates(resp *http.Response) ([]currencyRate, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&rates); err != nil {
 		return nil, err
 	}
+	log.Printf("monobank rates: %v", rates)
 
 	return rates, nil
 }
