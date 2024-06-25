@@ -1,23 +1,15 @@
 package service
 
 import (
+	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/util"
 	"log"
 	"time"
 )
 
-type CurrencyRate struct {
-	CurrencyCodeA int     `json:"currencyCodeA"`
-	CurrencyCodeB int     `json:"currencyCodeB"`
-	Date          int64   `json:"date"`
-	RateSell      float64 `json:"rateSell,omitempty"`
-	RateBuy       float64 `json:"rateBuy,omitempty"`
-	RateCross     float64 `json:"rateCross,omitempty"`
-}
-
 type CurrencyService struct {
 	repo         ExchangeRateRepo
-	rateProvider RateProvider
+	rateProvider rate_provider.RateProvider
 	latestRate   *util.InMemoryCache[float64]
 }
 
@@ -26,11 +18,7 @@ type ExchangeRateRepo interface {
 	GetLatestRate() (float64, error)
 }
 
-type RateProvider interface {
-	FetchRateFromAPI() (float64, error)
-}
-
-func NewCurrencyService(repo ExchangeRateRepo, rateProvider RateProvider) *CurrencyService {
+func NewCurrencyService(repo ExchangeRateRepo, rateProvider rate_provider.RateProvider) *CurrencyService {
 	return &CurrencyService{
 		repo:         repo,
 		rateProvider: rateProvider,

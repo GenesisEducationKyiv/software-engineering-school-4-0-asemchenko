@@ -1,10 +1,12 @@
-package service
+package monobank
 
-import "testing"
+import (
+	"testing"
+)
 
 func Test_findUahRate(t *testing.T) {
 	type args struct {
-		rates []CurrencyRate
+		rates []currencyRate
 	}
 	tests := []struct {
 		name    string
@@ -15,7 +17,7 @@ func Test_findUahRate(t *testing.T) {
 		{
 			name: "Test with UAH rate",
 			args: args{
-				rates: []CurrencyRate{
+				rates: []currencyRate{
 					{
 						CurrencyCodeA: usdCode,
 						CurrencyCodeB: uahCode,
@@ -29,7 +31,7 @@ func Test_findUahRate(t *testing.T) {
 		{
 			name: "Test without UAH rate",
 			args: args{
-				rates: []CurrencyRate{
+				rates: []currencyRate{
 					{
 						CurrencyCodeA: usdCode,
 						CurrencyCodeB: getCurrencyCode("EUR"),

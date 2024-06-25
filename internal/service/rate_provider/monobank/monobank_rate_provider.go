@@ -1,11 +1,12 @@
-package service
+package monobank
 
 import (
+	"currency-notifier/internal/service/rate_provider"
+	"currency-notifier/internal/util"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bojanz/currency"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,22 +16,31 @@ import (
 var usdCode = getCurrencyCode("USD")
 var uahCode = getCurrencyCode("UAH")
 
-type MonobankRateProvider struct {
+type currencyRate struct {
+	CurrencyCodeA int     `json:"currencyCodeA"`
+	CurrencyCodeB int     `json:"currencyCodeB"`
+	Date          int64   `json:"date"`
+	RateSell      float64 `json:"rateSell,omitempty"`
+	RateBuy       float64 `json:"rateBuy,omitempty"`
+	RateCross     float64 `json:"rateCross,omitempty"`
+}
+
+type rateProvider struct {
 	monobankHostUrl string
 }
 
-func NewMonobankRateProvider(monobankHostUrl string) *MonobankRateProvider {
-	return &MonobankRateProvider{
+func NewMonobankRateProvider(monobankHostUrl string) rate_provider.RateProvider {
+	return &rateProvider{
 		monobankHostUrl: monobankHostUrl,
 	}
 }
 
-func (p *MonobankRateProvider) FetchRateFromAPI() (float64, error) {
+func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	resp, err := http.Get(p.monobankHostUrl + "/bank/currency")
 	if err != nil {
 		return 0, err
 	}
-	defer closeBody(resp.Body)
+	defer util.CloseBodyWithErrorHandling(resp.Body)
 
 	rates, err := extractRates(resp)
 	if err != nil {
@@ -40,27 +50,25 @@ func (p *MonobankRateProvider) FetchRateFromAPI() (float64, error) {
 	return findUahRate(rates)
 }
 
-func extractRates(resp *http.Response) ([]CurrencyRate, error) {
+func (p *rateProvider) GetName() string {
+	return "monobank-rate-provider"
+}
+
+func extractRates(resp *http.Response) ([]currencyRate, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var rates []CurrencyRate
+	var rates []currencyRate
 	if err := json.NewDecoder(resp.Body).Decode(&rates); err != nil {
 		return nil, err
 	}
+	log.Printf("monobank rates: %v", rates)
 
 	return rates, nil
 }
 
-func closeBody(Body io.ReadCloser) {
-	err := Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func findUahRate(rates []CurrencyRate) (float64, error) {
+func findUahRate(rates []currencyRate) (float64, error) {
 	for _, rate := range rates {
 		if rate.CurrencyCodeA == usdCode && rate.CurrencyCodeB == uahCode {
 			return rate.RateSell, nil

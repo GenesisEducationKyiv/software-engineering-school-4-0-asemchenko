@@ -52,6 +52,9 @@ func setEnvironmentVariables(t *testing.T) {
 	handleError(t, os.Setenv("DB_USER", "root"))
 	handleError(t, os.Setenv("DB_PASSWORD", "password"))
 	handleError(t, os.Setenv("DB_NAME", "currency_notifier"))
+
+	handleError(t, os.Setenv("MIGRATIONS_PATH", "file://../../db/migrations"))
+
 	handleError(t, os.Setenv("SMTP_HOST", "localhost"))
 	handleError(t, os.Setenv("SMTP_PORT", "1025"))
 	handleError(t, os.Setenv("MONOBANK_HOST_URL", "http://localhost:8282"))
