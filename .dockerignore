@@ -1,0 +1,16 @@
+/main
+/vendor
+*.log
+*.out
+*.exe
+/build
+/tmp
+/.cache
+.vscode/
+.idea/
+*.swp
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.env
