@@ -19,11 +19,11 @@ services:
       - db_data:/var/lib/postgresql/data
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: currency-notifier
+      dockerfile: currency-notifier/Dockerfile
     restart: always
     env_file:
-      - .env
+      - currency-notifier/.env
     ports:
       - "8080:8080"
     depends_on:
