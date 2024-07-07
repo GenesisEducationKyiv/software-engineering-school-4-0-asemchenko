@@ -23,8 +23,16 @@ services:
       interval: 2s
       timeout: 10s
       retries: 10
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: username
+      RABBITMQ_DEFAULT_PASS: password
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmqctl status" ]
+      interval: 2s
+      timeout: 10s
+      retries: 10

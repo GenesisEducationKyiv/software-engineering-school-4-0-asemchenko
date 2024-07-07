@@ -2,6 +2,7 @@ package context
 
 import (
 	"currency-notifier/internal/jobs"
+	"currency-notifier/internal/messaging"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/service"
 	"currency-notifier/internal/service/rate_provider"
@@ -19,6 +20,7 @@ type AppContext struct {
 
 	SubscriptionRepo *repository.SubscriptionRepository
 	RateRepository   *repository.ExchangeRateRepository
+	MessagePublisher *messaging.RabbitMQPublisher
 
 	MonobankRateProvider   rate_provider.RateProvider
 	PrivatBankRateProvider rate_provider.RateProvider
@@ -44,6 +46,12 @@ func (ctx *AppContext) Init() {
 
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
+	ctx.MessagePublisher = messaging.NewRabbitMQPublisher(
+		util.GetEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+		util.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
+	)
+	ctx.MessagePublisher.Connect()
+	log.Printf("Connected to RabbitMQ")
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
 	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
@@ -55,7 +63,7 @@ func (ctx *AppContext) Init() {
 		ctx.NbuRateProvider,
 	)
 
-	ctx.EmailService = service.NewEmailService()
+	ctx.EmailService = service.NewEmailService(ctx.MessagePublisher)
 	ctx.SubscriptionService = service.NewSubscriptionService(ctx.SubscriptionRepo)
 	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.AggregatedRateProvider)
 

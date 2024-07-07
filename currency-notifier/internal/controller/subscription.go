@@ -22,27 +22,30 @@ func NewSubscriptionController(service *service.SubscriptionService) *Subscripti
 // @Tags subscription
 // @Accept x-www-form-urlencoded
 // @Produce json
-// @Param email formData string true "Email address"
-// @Success 200 {string} string "Email added"
+// @Param email formData string true "TargetEmail address"
+// @Success 200 {string} string "TargetEmail added"
 // @Failure 409 {string} string "Return if email already exists in the database"
 // @Router /subscribe [post]
 func (c *SubscriptionController) Subscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	if email == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
+		http.Error(w, "TargetEmail is required", http.StatusBadRequest)
 		return
 	}
 
 	err := c.Service.Subscribe(email)
-	renderSubscriptionResponse(w, &err)
+	renderSubscriptionResponse(w, err)
 }
 
-func renderSubscriptionResponse(w http.ResponseWriter, subscribeError *error) {
+func renderSubscriptionResponse(w http.ResponseWriter, subscribeError error) {
 	if subscribeError != nil {
-		if errors.Is(*subscribeError, exceptions.ErrEmailAlreadySubscribed) {
+		if errors.Is(subscribeError, exceptions.ErrEmailAlreadySubscribed) {
 			util.RespondJSON(w, http.StatusConflict, map[string]string{"message": "Email already subscribed"})
 		} else {
-			util.RespondJSON(w, http.StatusInternalServerError, map[string]string{"message": "Internal server error"})
+			util.RespondJSON(w, http.StatusInternalServerError, map[string]string{
+				"message": "Internal server error",
+				"cause":   subscribeError.Error(),
+			})
 		}
 		return
 	}

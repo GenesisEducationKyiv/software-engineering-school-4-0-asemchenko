@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "currency-notifier/docs"
 	"currency-notifier/internal/context"
 	"currency-notifier/internal/server"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
