@@ -6,10 +6,10 @@ import (
 )
 
 type RabbitMQPublisher struct {
-	Url        string
-	QueueName  string
 	connection *amqp.Connection
 	channel    *amqp.Channel
+	Url        string
+	QueueName  string
 }
 
 func NewRabbitMQPublisher(url string, queueName string) *RabbitMQPublisher {
