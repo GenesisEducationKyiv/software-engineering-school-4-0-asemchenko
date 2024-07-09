@@ -22,7 +22,7 @@ func (r *SubscriptionRepository) CreateSubscription(subscription *models.Subscri
 }
 
 func (r *SubscriptionRepository) GetAllActiveSubscriptions() ([]models.Subscription, error) {
-	rows, err := r.DB.Query("SELECT id, email, created_at, is_active FROM subscriptions")
+	rows, err := r.DB.Query("SELECT id, email, created_at, is_active FROM subscriptions WHERE is_active=true")
 	if err != nil {
 		log.Printf("Error fetching subscriptions: %v", err)
 		return nil, err
