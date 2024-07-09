@@ -1,8 +1,9 @@
 package messaging
 
 import (
+	"currency-notifier/internal/shared/api"
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
+	"log"
 )
 
 type RatePublisher struct {
@@ -16,6 +17,7 @@ func NewRatePublisher(publisher *RabbitMQPublisher) *RatePublisher {
 }
 
 func (p *RatePublisher) OnCurrencyRateUpdated(usdUahRate float64) error {
+	log.Printf("Sending rate update message: %v", usdUahRate)
 	rateUpdateMessage := api.RateUpdateMessage{
 		Currencies: map[string]float64{
 			"usd_uah": usdUahRate,

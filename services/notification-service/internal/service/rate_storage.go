@@ -1,6 +1,9 @@
 package service
 
-import "errors"
+import (
+	"errors"
+	"log"
+)
 
 var (
 	ErrRateNotFound = errors.New("rate not found")
@@ -22,6 +25,7 @@ func NewRateStorage() RateStorage {
 }
 
 func (s *storage) SaveRate(rateCode string, rate float64) {
+	log.Printf("Saving rate %s: %f", rateCode, rate)
 	s.rates[rateCode] = rate
 }
 

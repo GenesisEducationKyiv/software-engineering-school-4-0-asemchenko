@@ -2,13 +2,13 @@ package consumers
 
 import (
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 	"notification-service/internal/service"
+	"notification-service/internal/shared/api"
 )
 
 type RemoveSubscriptionConsumer interface {
-	Consume(message []byte)
+	Consume(message string)
 }
 
 func NewRemoveSubscriptionConsumer(subscriptionService service.SubscriptionService) RemoveSubscriptionConsumer {
@@ -21,9 +21,9 @@ type removeSubscriptionConsumer struct {
 	subscriptionService service.SubscriptionService
 }
 
-func (c *removeSubscriptionConsumer) Consume(message []byte) {
+func (c *removeSubscriptionConsumer) Consume(message string) {
 	var msg api.RemoveSubscriptionMessage
-	err := json.Unmarshal(message, &msg)
+	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
 		log.Printf("Failed to parse message: %v", err)
 		return

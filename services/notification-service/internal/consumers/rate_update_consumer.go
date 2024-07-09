@@ -2,9 +2,9 @@ package consumers
 
 import (
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 	"notification-service/internal/service"
+	"notification-service/internal/shared/api"
 )
 
 type RateUpdateConsumer struct {
@@ -17,15 +17,15 @@ func NewRateUpdateConsumer(rateStorage service.RateStorage) *RateUpdateConsumer 
 	}
 }
 
-func (c *RateUpdateConsumer) Consume(message []byte) {
+func (c *RateUpdateConsumer) Consume(message string) {
 	var msg api.RateUpdateMessage
-	err := json.Unmarshal(message, &msg)
+	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
 		log.Printf("Failed to parse message: %v", err)
 		return
 	}
 
-	log.Printf("Received rate update message: %v", msg)
+	log.Printf("Received rate update message: %v", msg.Currencies)
 	for s := range msg.Currencies {
 		c.rateStorage.SaveRate(s, msg.Currencies[s])
 	}

@@ -2,9 +2,9 @@ package consumers
 
 import (
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 	"notification-service/internal/messaging"
+	"notification-service/internal/shared/api"
 )
 
 type ConsumerController interface {
@@ -54,13 +54,13 @@ func (c *consumerController) Consume(message []byte) {
 
 	switch msg.Type {
 	case api.MessageTypeRateUpdate:
-		c.rateUpdateConsumer.Consume(message)
+		c.rateUpdateConsumer.Consume(msg.Body)
 		break
 	case api.MessageTypeAddSubscription:
-		c.addSubscriberConsumer.Consume(message)
+		c.addSubscriberConsumer.Consume(msg.Body)
 		break
 	case api.MessageTypeRemoveSubscription:
-		c.removeSubscriptionConsumer.Consume(message)
+		c.removeSubscriptionConsumer.Consume(msg.Body)
 		break
 	}
 }
