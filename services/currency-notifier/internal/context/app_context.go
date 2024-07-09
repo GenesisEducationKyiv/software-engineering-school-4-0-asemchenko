@@ -22,8 +22,8 @@ type AppContext struct {
 	UserRepository *repository.UserRepository
 	RateRepository *repository.ExchangeRateRepository
 
-	MessagePublisher      *messaging.RabbitMQPublisher // TODO anse - replace with interfaces
-	RateUpdatePublisher   *messaging.RatePublisher     // TODO anse - replace with interfaces
+	MessagePublisher      *messaging.RabbitMQPublisher
+	RateUpdatePublisher   *messaging.RatePublisher
 	SubscriptionPublisher messaging.SubscriptionPublisher
 
 	MonobankRateProvider   rate_provider.RateProvider

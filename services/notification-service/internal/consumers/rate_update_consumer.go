@@ -11,9 +11,15 @@ type RateUpdateConsumer struct {
 	rateStorage service.RateStorage
 }
 
-func (c *RateUpdateConsumer) Consume(message string) {
+func NewRateUpdateConsumer(rateStorage service.RateStorage) *RateUpdateConsumer {
+	return &RateUpdateConsumer{
+		rateStorage: rateStorage,
+	}
+}
+
+func (c *RateUpdateConsumer) Consume(message []byte) {
 	var msg api.RateUpdateMessage
-	err := json.Unmarshal([]byte(message), &msg)
+	err := json.Unmarshal(message, &msg)
 	if err != nil {
 		log.Printf("Failed to parse message: %v", err)
 		return

@@ -4,18 +4,47 @@ import (
 	"encoding/json"
 	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
+	"notification-service/internal/messaging"
 )
 
-type ConsumerController struct {
-	rateUpdateConsumer         *RateUpdateConsumer
-	addSubscriberConsumer      *AddSubscriptionConsumer
-	removeSubscriptionConsumer *RemoveSubscriptionConsumer
+type ConsumerController interface {
+	StartConsuming()
 }
 
-func (c *ConsumerController) Consume(message string) {
+type consumerController struct {
+	rabbitMqConsumer           *messaging.RabbitMQConsumer
+	rateUpdateConsumer         *RateUpdateConsumer
+	addSubscriberConsumer      AddSubscriptionConsumer
+	removeSubscriptionConsumer RemoveSubscriptionConsumer
+}
+
+func NewConsumerController(
+	rateUpdateConsumer *RateUpdateConsumer,
+	addSubscriberConsumer AddSubscriptionConsumer,
+	removeSubscriptionConsumer RemoveSubscriptionConsumer,
+) ConsumerController {
+	return &consumerController{
+		rateUpdateConsumer:         rateUpdateConsumer,
+		addSubscriberConsumer:      addSubscriberConsumer,
+		removeSubscriptionConsumer: removeSubscriptionConsumer,
+	}
+}
+
+func (c *consumerController) StartConsuming() {
+	messagesChannel, err := c.rabbitMqConsumer.Consume()
+	if err != nil {
+		log.Fatalf("Failed to consume messages: %v", err)
+	}
+
+	for msg := range messagesChannel {
+		c.Consume(msg.Body)
+	}
+}
+
+func (c *consumerController) Consume(message []byte) {
 	// unpack message into api.Message type
 	var msg api.Message
-	err := json.Unmarshal([]byte(message), &msg)
+	err := json.Unmarshal(message, &msg)
 	if err != nil {
 		log.Printf("Failed to parse message: %v", err)
 		return

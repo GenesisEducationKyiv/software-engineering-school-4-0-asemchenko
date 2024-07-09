@@ -1,9 +1,9 @@
 package service
 
 import (
-	"currency-notifier/internal/mocks"
 	"github.com/golang/mock/gomock"
 	"gopkg.in/gomail.v2"
+	"notification-service/internal/mocks"
 	"reflect"
 	"testing"
 )
