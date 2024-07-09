@@ -55,12 +55,9 @@ func (c *consumerController) Consume(message []byte) {
 	switch msg.Type {
 	case api.MessageTypeRateUpdate:
 		c.rateUpdateConsumer.Consume(msg.Body)
-		break
 	case api.MessageTypeAddSubscription:
 		c.addSubscriberConsumer.Consume(msg.Body)
-		break
 	case api.MessageTypeRemoveSubscription:
 		c.removeSubscriptionConsumer.Consume(msg.Body)
-		break
 	}
 }
