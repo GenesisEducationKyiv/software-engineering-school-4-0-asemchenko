@@ -46,7 +46,7 @@ func (d *Db) Init() {
 	}
 
 	if err != nil {
-		log.Fatal("Failed to initialize DB", err)
+		log.Fatal("Failed to initialize DB: ", err)
 	}
 }
 

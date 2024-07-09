@@ -31,7 +31,7 @@ paths:
       - application/x-www-form-urlencoded
       description: Request adds a new email to receive USD to UAH exchange rate updates
       parameters:
-      - description: Email address
+      - description: TargetEmail address
         in: formData
         name: email
         required: true
@@ -40,7 +40,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Email added
+          description: TargetEmail added
           schema:
             type: string
         "409":

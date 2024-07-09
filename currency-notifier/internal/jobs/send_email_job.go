@@ -63,7 +63,7 @@ func (j SendEmailJob) sendRatesToActiveSubscribers(subscriptions *[]models.Subsc
 		if err != nil {
 			log.Printf("Error sending email to %s: %v", subscription.Email, err)
 		} else {
-			log.Printf("Email sent to %s", subscription.Email)
+			log.Printf("Email for %s sent to processing", subscription.Email)
 		}
 	}
 	log.Printf("Emails sent")
