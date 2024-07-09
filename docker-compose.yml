@@ -36,7 +36,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - currency-notifier/.env-local
+      - services/currency-notifier/.env-local
     ports:
       - "8080:8080"
     depends_on:
@@ -51,7 +51,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     env_file:
-      - notification-service/.env-prod
+      - services/notification-service/.env-prod
     depends_on:
       rabbitmq:
         condition: service_healthy
