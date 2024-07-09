@@ -59,7 +59,7 @@ func (ctx *AppContext) Init() {
 	ctx.rateUpdateConsumer = consumers.NewRateUpdateConsumer(ctx.rateStorage)
 	ctx.addSubscriptionConsumer = consumers.NewAddSubscriptionConsumer(ctx.subscriptionService)
 	ctx.removeSubscriptionConsumer = consumers.NewRemoveSubscriptionConsumer(ctx.subscriptionService)
-	ctx.consumerController = consumers.NewConsumerController(ctx.rateUpdateConsumer, ctx.addSubscriptionConsumer, ctx.removeSubscriptionConsumer)
+	ctx.consumerController = consumers.NewConsumerController(ctx.rabbitMqConsumer, ctx.rateUpdateConsumer, ctx.addSubscriptionConsumer, ctx.removeSubscriptionConsumer)
 
 	ctx.consumerController.StartConsuming()
 
@@ -81,8 +81,8 @@ func getDbConfig() db.DbConfig {
 	return db.DbConfig{
 		Host:     util.GetEnv("DB_HOST", "localhost"),
 		Port:     util.GetEnv("DB_PORT", "5432"),
-		User:     util.GetEnv("DB_USER", "postgres"),
-		Password: util.GetEnv("DB_PASSWORD", "postgres"),
+		User:     util.GetEnv("DB_USER", "root"),
+		Password: util.GetEnv("DB_PASSWORD", "password"),
 		Name:     util.GetEnv("DB_NAME", "notification_service"),
 		SSLMode:  util.GetEnv("DB_SSLMODE", "disable"),
 	}
@@ -91,7 +91,7 @@ func getDbConfig() db.DbConfig {
 func (ctx *AppContext) initCron() {
 	ctx.cronInstance = cron.New()
 
-	_, err := ctx.cronInstance.AddFunc("@daily", ctx.sendEmailJob.SendEmails)
+	_, err := ctx.cronInstance.AddFunc(util.GetEnv("EMAIL_CRON_CONFIG", "@daily"), ctx.sendEmailJob.SendEmails)
 	if err != nil {
 		log.Fatal()
 	}

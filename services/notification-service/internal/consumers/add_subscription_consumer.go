@@ -29,6 +29,7 @@ func (c *addSubscriptionConsumer) Consume(message []byte) {
 		return
 	}
 
+	log.Printf("Received add subscription message: %v", msg)
 	err = c.subscriptionService.CreateSubscription(msg.UserID, msg.Email)
 	if err != nil {
 		log.Printf("Failed to create subscription: %v", err)

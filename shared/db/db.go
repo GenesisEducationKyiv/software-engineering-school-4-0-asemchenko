@@ -40,6 +40,7 @@ func (d *Db) Init() {
 
 	var err error
 	d.db, err = sql.Open("postgres", connStr)
+	log.Printf("Connected to database ")
 
 	if err == nil {
 		err = d.migrate()

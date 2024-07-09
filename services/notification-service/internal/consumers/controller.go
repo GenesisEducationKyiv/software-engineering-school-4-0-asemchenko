@@ -19,11 +19,13 @@ type consumerController struct {
 }
 
 func NewConsumerController(
+	rabbitMqConsumer *messaging.RabbitMQConsumer,
 	rateUpdateConsumer *RateUpdateConsumer,
 	addSubscriberConsumer AddSubscriptionConsumer,
 	removeSubscriptionConsumer RemoveSubscriptionConsumer,
 ) ConsumerController {
 	return &consumerController{
+		rabbitMqConsumer:           rabbitMqConsumer,
 		rateUpdateConsumer:         rateUpdateConsumer,
 		addSubscriberConsumer:      addSubscriberConsumer,
 		removeSubscriptionConsumer: removeSubscriptionConsumer,

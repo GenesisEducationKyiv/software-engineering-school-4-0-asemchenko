@@ -1,5 +1,5 @@
 services:
-  db:
+  currency_notifier_db:
     image: postgres:13
     restart: always
     environment:
@@ -14,7 +14,23 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - currency_notifier_db_data:/var/lib/postgresql/data
+
+  notification_service_db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: notification_service
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d notification_service" ]
+      interval: 2s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - notification_service_db_data:/var/lib/postgresql/data
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -40,7 +56,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      db:
+      currency_notifier_db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
@@ -53,9 +69,12 @@ services:
     env_file:
       - services/notification-service/.env-prod
     depends_on:
+      notification_service_db:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
 
 volumes:
-  db_data:
+  currency_notifier_db_data:
+  notification_service_db_data:

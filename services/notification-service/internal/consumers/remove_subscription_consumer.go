@@ -29,6 +29,7 @@ func (c *removeSubscriptionConsumer) Consume(message []byte) {
 		return
 	}
 
+	log.Printf("Received remove subscription message: %v", msg)
 	err = c.subscriptionService.DeactivateSubscription(msg.UserID)
 	if err != nil {
 		log.Printf("Failed to deactivate subscription: %v", err)

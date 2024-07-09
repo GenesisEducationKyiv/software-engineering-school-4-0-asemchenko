@@ -25,6 +25,7 @@ func (c *RateUpdateConsumer) Consume(message []byte) {
 		return
 	}
 
+	log.Printf("Received rate update message: %v", msg)
 	for s := range msg.Currencies {
 		c.rateStorage.SaveRate(s, msg.Currencies[s])
 	}
