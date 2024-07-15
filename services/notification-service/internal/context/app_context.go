@@ -72,7 +72,7 @@ func (ctx *AppContext) Init() {
 	ctx.consumerController.StartConsuming()
 	ctx.subscriptionStatusPublisher = publishers.NewSubscriptionPublisher(
 		ctx.rabbitMqConsumer,
-		util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE", "subscription-status"),
+		getRabbitMqQueueName(),
 	)
 
 	ctx.sendEmailJob = jobs.NewSendEmailJob(ctx.rateStorage, ctx.subscriptionService, ctx.emailService)

@@ -57,18 +57,19 @@ func (ctx *AppContext) Init() {
 	log.Printf("Connected to RabbitMQ")
 	ctx.RateUpdatePublisher = messaging.NewRatePublisher(
 		ctx.MessagePublisher,
-		util.GetEnv("RABBITMQ_RATE_UPDATE_QUEUE", "currency-notifier"),
+		getRabbitMqQueueName(),
 	)
 	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(
 		ctx.MessagePublisher,
-		util.GetEnv("RABBITMQ_QUEUE_NAME", "currency-notifier"),
+		getRabbitMqQueueName(),
 	)
 	ctx.SubscriptionStatusListener = messaging.NewSubscriptionStatusListener()
 	ctx.ConsumerController = messaging.NewConsumerController(
 		ctx.MessagePublisher,
 		ctx.SubscriptionStatusListener,
 	)
-	ctx.ConsumerController.StartConsuming(util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE", "subscription-status"))
+	log.Printf("Start listening subscription status messages")
+	ctx.ConsumerController.StartConsuming(getRabbitMqQueueName())
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
 	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
@@ -114,9 +115,13 @@ func getDbConfig() db.DbConfig {
 	return db.DbConfig{
 		Host:     util.GetEnv("DB_HOST", "localhost"),
 		Port:     util.GetEnv("DB_PORT", "5432"),
-		User:     util.GetEnv("DB_USER", "postgres"),
-		Password: util.GetEnv("DB_PASSWORD", "postgres"),
+		User:     util.GetEnv("DB_USER", "root"),
+		Password: util.GetEnv("DB_PASSWORD", "password"),
 		Name:     util.GetEnv("DB_NAME", "currency_notifier"),
 		SSLMode:  util.GetEnv("DB_SSLMODE", "disable"),
 	}
+}
+
+func getRabbitMqQueueName() string {
+	return util.GetEnv("RABBITMQ_QUEUE_NAME", "currency-notifier")
 }
