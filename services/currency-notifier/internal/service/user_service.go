@@ -60,6 +60,7 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 		log.Printf("Got subscription status: %v", status)
 		if !status.IsSuccessfullyCreated() {
 			log.Printf("Failed to create subscription: %v. Rollbacking - Deleting user %s", status.Details, user.ID.String())
+			util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 			return nil, exceptions.ErrSubscriptionFailed(status.Details)
 		}
 	case <-time.After(30 * time.Second):
