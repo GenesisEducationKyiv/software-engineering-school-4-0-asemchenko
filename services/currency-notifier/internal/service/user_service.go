@@ -6,6 +6,7 @@ import (
 	"currency-notifier/internal/models"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/util"
+	"github.com/emicklei/go-restful/v3/log"
 	"github.com/google/uuid"
 	"time"
 )
@@ -42,6 +43,7 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 
 	err = s.SubscriptionPublisher.PublishAddSubscription(user.ID, user.Email)
 	if err != nil {
+		log.Printf("Failed to publish subscription message. Rollbacking - Deleting user %s", user.ID.String())
 		util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 	}
 
@@ -50,7 +52,9 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 
 	select {
 	case status := <-subscriptionStatusChan.Channel:
+		log.Printf("Got subscription status: %v", status)
 		if !status.IsSuccessfullyCreated() {
+			log.Printf("Failed to create subscription: %v. Rollbacking - Deleting user %s", status.Details, user.ID.String())
 			return nil, exceptions.ErrSubscriptionFailed(status.Details)
 		}
 	case <-time.After(30 * time.Second):
