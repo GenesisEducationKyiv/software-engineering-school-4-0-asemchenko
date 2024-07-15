@@ -34,9 +34,9 @@ const (
 )
 
 type SubscriptionStatusMessage struct {
-	UserID  uuid.UUID `json:"user_id"`
 	Status  string    `json:"status"`
 	Details string    `json:"details"`
+	UserID  uuid.UUID `json:"user_id"`
 }
 
 func (m *SubscriptionStatusMessage) IsSuccessfullyCreated() bool {

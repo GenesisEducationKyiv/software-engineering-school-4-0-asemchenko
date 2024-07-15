@@ -20,9 +20,9 @@ type subscriptionStatusListener struct {
 }
 
 type StatusChannel struct {
+	Channel   chan api.SubscriptionStatusMessage
 	UserId    uuid.UUID
 	ChannelId uuid.UUID
-	Channel   chan api.SubscriptionStatusMessage
 }
 
 func NewSubscriptionStatusListener() SubscriptionStatusListener {
