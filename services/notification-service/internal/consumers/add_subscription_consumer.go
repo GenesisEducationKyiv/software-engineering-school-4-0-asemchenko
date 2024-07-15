@@ -3,8 +3,10 @@ package consumers
 import (
 	"encoding/json"
 	"log"
+	"notification-service/internal/publishers"
 	"notification-service/internal/service"
 	"notification-service/internal/shared/api"
+	"notification-service/internal/util"
 )
 
 type AddSubscriptionConsumer interface {
@@ -18,7 +20,8 @@ func NewAddSubscriptionConsumer(subscriptionService service.SubscriptionService)
 }
 
 type addSubscriptionConsumer struct {
-	subscriptionService service.SubscriptionService
+	subscriptionService         service.SubscriptionService
+	subscriptionStatusPublisher publishers.SubscriptionStatusPublisher
 }
 
 func (c *addSubscriptionConsumer) Consume(message string) {
@@ -32,6 +35,7 @@ func (c *addSubscriptionConsumer) Consume(message string) {
 	log.Printf("Received add subscription message: %v", msg)
 	err = c.subscriptionService.CreateSubscription(msg.UserID, msg.Email)
 	if err != nil {
+		util.WarnOnError(c.subscriptionStatusPublisher.PublishSubscriptionStatus(msg.UserID, api.SubscriptionStatusFailedToCreate))
 		log.Printf("Failed to create subscription: %v", err)
 	}
 }

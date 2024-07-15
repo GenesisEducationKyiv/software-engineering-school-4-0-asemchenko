@@ -13,6 +13,12 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{DB: db}
 }
 
+func (r *UserRepository) DeleteUser(id string) error {
+	query := "DELETE FROM users WHERE id=$1"
+	_, err := r.DB.Exec(query, id)
+	return err
+}
+
 func (r *UserRepository) CreateUser(user *models.User) error {
 	query := "INSERT INTO users (id, email, created_at) VALUES ($1, $2, $3)"
 	_, err := r.DB.Exec(query, user.ID, user.Email, user.CreatedAt)

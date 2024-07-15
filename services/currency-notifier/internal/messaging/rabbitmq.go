@@ -5,35 +5,34 @@ import (
 	"log"
 )
 
-type RabbitMQPublisher struct {
+type RabbitMqClient struct {
 	connection *amqp.Connection
 	channel    *amqp.Channel
 	Url        string
-	QueueName  string
 }
 
-func NewRabbitMQPublisher(url string, queueName string) *RabbitMQPublisher {
-	return &RabbitMQPublisher{
-		Url:       url,
-		QueueName: queueName,
+func NewRabbitMqClient(url string) *RabbitMqClient {
+	return &RabbitMqClient{
+		Url: url,
 	}
 }
 
-func (p *RabbitMQPublisher) Connect() {
+func (c *RabbitMqClient) Connect() {
 	var err error
-	p.connection, err = amqp.Dial(p.Url)
+	c.connection, err = amqp.Dial(c.Url)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	p.channel, err = p.connection.Channel()
+	c.channel, err = c.connection.Channel()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
-	// Declare a queue
-	_, err = p.channel.QueueDeclare(
-		p.QueueName,
+func (c *RabbitMqClient) DeclareQueue(queueName string) {
+	_, err := c.channel.QueueDeclare(
+		queueName,
 		true,
 		false,
 		false,
@@ -45,25 +44,25 @@ func (p *RabbitMQPublisher) Connect() {
 	}
 }
 
-func (p *RabbitMQPublisher) Close() {
-	if p.channel != nil {
-		err := p.channel.Close()
+func (c *RabbitMqClient) Close() {
+	if c.channel != nil {
+		err := c.channel.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	if p.connection != nil {
-		err := p.connection.Close()
+	if c.connection != nil {
+		err := c.connection.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func (p *RabbitMQPublisher) PublishMessage(messageBody []byte) error {
-	err := p.channel.Publish(
+func (c *RabbitMqClient) PublishMessage(messageBody []byte, queueName string) error {
+	err := c.channel.Publish(
 		"",
-		p.QueueName,
+		queueName,
 		false,
 		false,
 		amqp.Publishing{
@@ -77,4 +76,21 @@ func (p *RabbitMQPublisher) PublishMessage(messageBody []byte) error {
 	}
 
 	return nil
+}
+
+func (c *RabbitMqClient) Consume(queueName string) (<-chan amqp.Delivery, error) {
+	messagesChannel, err := c.channel.Consume(
+		queueName,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return messagesChannel, nil
 }

@@ -5,17 +5,19 @@ import (
 	"currency-notifier/internal/messaging"
 	"currency-notifier/internal/models"
 	"currency-notifier/internal/repository"
+	"currency-notifier/internal/util"
 	"github.com/google/uuid"
 	"time"
 )
 
 type UserService struct {
-	Repo           *repository.UserRepository
-	eventPublisher messaging.SubscriptionPublisher
+	Repo                       *repository.UserRepository
+	SubscriptionPublisher      messaging.SubscriptionPublisher
+	SubscriptionStatusConsumer messaging.SubscriptionStatusListener
 }
 
 func NewUserService(repo *repository.UserRepository, publisher messaging.SubscriptionPublisher) *UserService {
-	return &UserService{Repo: repo, eventPublisher: publisher}
+	return &UserService{Repo: repo, SubscriptionPublisher: publisher}
 }
 
 func (s *UserService) Subscribe(email string) (*models.User, error) {
@@ -38,10 +40,27 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 		return nil, err
 	}
 
-	err = s.eventPublisher.PublishAddSubscription(user.ID, user.Email)
+	err = s.SubscriptionPublisher.PublishAddSubscription(user.ID, user.Email)
+	if err != nil {
+		util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
+	}
+
+	subscriptionStatusChan := s.SubscriptionStatusConsumer.SubscribeOnUser(user.ID)
+	defer s.SubscriptionStatusConsumer.CloseSubscription(subscriptionStatusChan)
+
+	select {
+	case status := <-subscriptionStatusChan.Channel:
+		if !status.IsSuccessfullyCreated() {
+			return nil, exceptions.ErrSubscriptionFailed(status.Details)
+		}
+	case <-time.After(30 * time.Second):
+		util.WarnOnError(s.SubscriptionPublisher.PublishRemoveSubscription(user.ID))
+		return nil, exceptions.ErrSubscriptionTimeout
+	}
+
 	return user, err
 }
 
 func (s *UserService) Unsubscribe(userId uuid.UUID) error {
-	return s.eventPublisher.PublishRemoveSubscription(userId)
+	return s.SubscriptionPublisher.PublishRemoveSubscription(userId)
 }

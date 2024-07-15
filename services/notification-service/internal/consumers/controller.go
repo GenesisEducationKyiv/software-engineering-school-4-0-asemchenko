@@ -5,6 +5,7 @@ import (
 	"log"
 	"notification-service/internal/messaging"
 	"notification-service/internal/shared/api"
+	"notification-service/internal/util"
 )
 
 type ConsumerController interface {
@@ -12,28 +13,32 @@ type ConsumerController interface {
 }
 
 type consumerController struct {
-	rabbitMqConsumer           *messaging.RabbitMQConsumer
+	rabbitMqConsumer           *messaging.RabbitMqClient
 	rateUpdateConsumer         *RateUpdateConsumer
 	addSubscriberConsumer      AddSubscriptionConsumer
 	removeSubscriptionConsumer RemoveSubscriptionConsumer
+	queueName                  string
 }
 
 func NewConsumerController(
-	rabbitMqConsumer *messaging.RabbitMQConsumer,
+	rabbitMqConsumer *messaging.RabbitMqClient,
 	rateUpdateConsumer *RateUpdateConsumer,
 	addSubscriberConsumer AddSubscriptionConsumer,
 	removeSubscriptionConsumer RemoveSubscriptionConsumer,
+	queueName string,
 ) ConsumerController {
+	util.WarnOnError(rabbitMqConsumer.DeclareQueue(queueName))
 	return &consumerController{
 		rabbitMqConsumer:           rabbitMqConsumer,
 		rateUpdateConsumer:         rateUpdateConsumer,
 		addSubscriberConsumer:      addSubscriberConsumer,
 		removeSubscriptionConsumer: removeSubscriptionConsumer,
+		queueName:                  queueName,
 	}
 }
 
 func (c *consumerController) StartConsuming() {
-	messagesChannel, err := c.rabbitMqConsumer.Consume()
+	messagesChannel, err := c.rabbitMqConsumer.Consume(c.queueName)
 	if err != nil {
 		log.Fatalf("Failed to consume messages: %v", err)
 	}

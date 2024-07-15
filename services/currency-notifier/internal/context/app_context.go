@@ -22,9 +22,11 @@ type AppContext struct {
 	UserRepository *repository.UserRepository
 	RateRepository *repository.ExchangeRateRepository
 
-	MessagePublisher      *messaging.RabbitMQPublisher
-	RateUpdatePublisher   *messaging.RatePublisher
-	SubscriptionPublisher messaging.SubscriptionPublisher
+	MessagePublisher           *messaging.RabbitMqClient
+	RateUpdatePublisher        *messaging.RatePublisher
+	SubscriptionPublisher      messaging.SubscriptionPublisher
+	ConsumerController         messaging.ConsumerController
+	SubscriptionStatusListener messaging.SubscriptionStatusListener
 
 	MonobankRateProvider   rate_provider.RateProvider
 	PrivatBankRateProvider rate_provider.RateProvider
@@ -48,14 +50,25 @@ func (ctx *AppContext) Init() {
 
 	ctx.UserRepository = repository.NewUserRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
-	ctx.MessagePublisher = messaging.NewRabbitMQPublisher(
+	ctx.MessagePublisher = messaging.NewRabbitMqClient(
 		util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/"),
-		util.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
 	)
 	ctx.MessagePublisher.Connect()
 	log.Printf("Connected to RabbitMQ")
-	ctx.RateUpdatePublisher = messaging.NewRatePublisher(ctx.MessagePublisher)
-	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(ctx.MessagePublisher)
+	ctx.RateUpdatePublisher = messaging.NewRatePublisher(
+		ctx.MessagePublisher,
+		util.GetEnv("RABBITMQ_RATE_UPDATE_QUEUE", "currency-notifier"),
+	)
+	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(
+		ctx.MessagePublisher,
+		util.GetEnv("RABBITMQ_QUEUE_NAME", "currency-notifier"),
+	)
+	ctx.SubscriptionStatusListener = messaging.NewSubscriptionStatusListener()
+	ctx.ConsumerController = messaging.NewConsumerController(
+		ctx.MessagePublisher,
+		ctx.SubscriptionStatusListener,
+	)
+	ctx.ConsumerController.StartConsuming(util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE", "subscription-status"))
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
 	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))

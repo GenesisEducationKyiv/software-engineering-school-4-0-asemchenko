@@ -6,6 +6,7 @@ const (
 	MessageTypeRateUpdate         = "rate_update"
 	MessageTypeAddSubscription    = "add_subscription"
 	MessageTypeRemoveSubscription = "remove_subscription"
+	MessageTypeSubscriptionStatus = "subscription_status"
 )
 
 type Message struct {
@@ -24,4 +25,20 @@ type AddSubscriptionMessage struct {
 
 type RemoveSubscriptionMessage struct {
 	UserID uuid.UUID `json:"user_id"`
+}
+
+// subscription status enum
+const (
+	SubscriptionStatusSuccessfullyCreated = "successfully_created"
+	SubscriptionStatusFailedToCreate      = "failed_to_create"
+)
+
+type SubscriptionStatusMessage struct {
+	UserID  uuid.UUID `json:"user_id"`
+	Status  string    `json:"status"`
+	Details string    `json:"details"`
+}
+
+func (m *SubscriptionStatusMessage) IsSuccessfullyCreated() bool {
+	return m.Status == SubscriptionStatusSuccessfullyCreated
 }

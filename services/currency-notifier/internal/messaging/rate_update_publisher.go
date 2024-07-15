@@ -7,12 +7,15 @@ import (
 )
 
 type RatePublisher struct {
-	rabbitMqPublisher *RabbitMQPublisher
+	rabbitMqPublisher *RabbitMqClient
+	queueName         string
 }
 
-func NewRatePublisher(publisher *RabbitMQPublisher) *RatePublisher {
+func NewRatePublisher(publisher *RabbitMqClient, queueName string) *RatePublisher {
+	publisher.DeclareQueue(queueName)
 	return &RatePublisher{
 		rabbitMqPublisher: publisher,
+		queueName:         queueName,
 	}
 }
 
@@ -39,5 +42,5 @@ func (p *RatePublisher) OnCurrencyRateUpdated(usdUahRate float64) error {
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody)
+	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
 }
