@@ -64,5 +64,7 @@ func (c *consumerController) Consume(message []byte) {
 		c.addSubscriberConsumer.Consume(msg.Body)
 	case api.MessageTypeRemoveSubscription:
 		c.removeSubscriptionConsumer.Consume(msg.Body)
+	default:
+		log.Printf("Unknown message type: %v", msg.Type)
 	}
 }

@@ -26,6 +26,7 @@ func NewConsumerController(
 }
 
 func (c *consumerController) StartConsuming(queueName string) {
+	c.rabbitMqClient.DeclareQueue(queueName)
 	messagesChannel, err := c.rabbitMqClient.Consume(queueName)
 	if err != nil {
 		log.Fatalf("Failed to consume messages: %v", err)

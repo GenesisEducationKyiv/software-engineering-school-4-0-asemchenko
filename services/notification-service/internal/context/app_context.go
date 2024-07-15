@@ -25,12 +25,14 @@ type AppContext struct {
 
 	rateStorage service.RateStorage
 
-	rabbitMqConsumer            *messaging.RabbitMqClient
-	rateUpdateConsumer          *consumers.RateUpdateConsumer
-	addSubscriptionConsumer     consumers.AddSubscriptionConsumer
-	removeSubscriptionConsumer  consumers.RemoveSubscriptionConsumer
-	consumerController          consumers.ConsumerController
+	rabbitMqClient *messaging.RabbitMqClient
+
 	subscriptionStatusPublisher publishers.SubscriptionStatusPublisher
+
+	rateUpdateConsumer         *consumers.RateUpdateConsumer
+	addSubscriptionConsumer    consumers.AddSubscriptionConsumer
+	removeSubscriptionConsumer consumers.RemoveSubscriptionConsumer
+	consumerController         consumers.ConsumerController
 
 	sendEmailJob *jobs.SendEmailJob
 }
@@ -52,28 +54,30 @@ func (ctx *AppContext) Init() {
 
 	ctx.rateStorage = service.NewRateStorage()
 
-	ctx.rabbitMqConsumer = messaging.NewRabbitMQConsumer(getRabbitMQConnectionUrl())
-	err := ctx.rabbitMqConsumer.Connect()
+	ctx.rabbitMqClient = messaging.NewRabbitMQConsumer(getRabbitMQConnectionUrl())
+	err := ctx.rabbitMqClient.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
 	log.Printf("Connected to RabbitMQ")
+
+	ctx.subscriptionStatusPublisher = publishers.NewSubscriptionPublisher(
+		ctx.rabbitMqClient,
+		getSubscriptionStatusQueue(),
+	)
+
 	ctx.rateUpdateConsumer = consumers.NewRateUpdateConsumer(ctx.rateStorage)
-	ctx.addSubscriptionConsumer = consumers.NewAddSubscriptionConsumer(ctx.subscriptionService)
+	ctx.addSubscriptionConsumer = consumers.NewAddSubscriptionConsumer(ctx.subscriptionService, ctx.subscriptionStatusPublisher)
 	ctx.removeSubscriptionConsumer = consumers.NewRemoveSubscriptionConsumer(ctx.subscriptionService)
 	ctx.consumerController = consumers.NewConsumerController(
-		ctx.rabbitMqConsumer,
+		ctx.rabbitMqClient,
 		ctx.rateUpdateConsumer,
 		ctx.addSubscriptionConsumer,
 		ctx.removeSubscriptionConsumer,
-		getRabbitMqQueueName(),
+		getSubscriptionManagementQueue(),
 	)
 
 	ctx.consumerController.StartConsuming()
-	ctx.subscriptionStatusPublisher = publishers.NewSubscriptionPublisher(
-		ctx.rabbitMqConsumer,
-		getRabbitMqQueueName(),
-	)
 
 	ctx.sendEmailJob = jobs.NewSendEmailJob(ctx.rateStorage, ctx.subscriptionService, ctx.emailService)
 
@@ -83,7 +87,7 @@ func (ctx *AppContext) Init() {
 func (ctx *AppContext) Close() {
 	ctx.db.Close()
 	ctx.cronInstance.Stop()
-	err := ctx.rabbitMqConsumer.Close()
+	err := ctx.rabbitMqClient.Close()
 	if err != nil {
 		log.Printf("Failed to close RabbitMQ connection: %v", err)
 	}
@@ -115,6 +119,10 @@ func getRabbitMQConnectionUrl() string {
 	return util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/")
 }
 
-func getRabbitMqQueueName() string {
-	return util.GetEnv("RABBITMQ_QUEUE_NAME", "currency-notifier")
+func getSubscriptionManagementQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_MANAGEMENT_QUEUE_NAME", "currency-notifier-subscription-management")
+}
+
+func getSubscriptionStatusQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE_NAME", "currency-notifier-subscription-status")
 }

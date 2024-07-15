@@ -57,11 +57,11 @@ func (ctx *AppContext) Init() {
 	log.Printf("Connected to RabbitMQ")
 	ctx.RateUpdatePublisher = messaging.NewRatePublisher(
 		ctx.MessagePublisher,
-		getRabbitMqQueueName(),
+		getSubscriptionManagementQueue(),
 	)
 	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(
 		ctx.MessagePublisher,
-		getRabbitMqQueueName(),
+		getSubscriptionManagementQueue(),
 	)
 	ctx.SubscriptionStatusListener = messaging.NewSubscriptionStatusListener()
 	ctx.ConsumerController = messaging.NewConsumerController(
@@ -69,7 +69,7 @@ func (ctx *AppContext) Init() {
 		ctx.SubscriptionStatusListener,
 	)
 	log.Printf("Start listening subscription status messages")
-	ctx.ConsumerController.StartConsuming(getRabbitMqQueueName())
+	go ctx.ConsumerController.StartConsuming(getSubscriptionStatusQueue())
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
 	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
@@ -81,7 +81,7 @@ func (ctx *AppContext) Init() {
 		ctx.NbuRateProvider,
 	)
 
-	ctx.SubscriptionService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher)
+	ctx.SubscriptionService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher, ctx.SubscriptionStatusListener)
 	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.AggregatedRateProvider)
 	ctx.CurrencyService.AddSubscriber(ctx.RateUpdatePublisher)
 
@@ -122,6 +122,10 @@ func getDbConfig() db.DbConfig {
 	}
 }
 
-func getRabbitMqQueueName() string {
-	return util.GetEnv("RABBITMQ_QUEUE_NAME", "currency-notifier")
+func getSubscriptionManagementQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_MANAGEMENT_QUEUE_NAME", "currency-notifier-subscription-management")
+}
+
+func getSubscriptionStatusQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE_NAME", "currency-notifier-subscription-status")
 }

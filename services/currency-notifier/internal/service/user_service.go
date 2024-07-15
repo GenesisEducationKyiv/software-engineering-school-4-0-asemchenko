@@ -17,8 +17,12 @@ type UserService struct {
 	SubscriptionStatusConsumer messaging.SubscriptionStatusListener
 }
 
-func NewUserService(repo *repository.UserRepository, publisher messaging.SubscriptionPublisher) *UserService {
-	return &UserService{Repo: repo, SubscriptionPublisher: publisher}
+func NewUserService(repo *repository.UserRepository, publisher messaging.SubscriptionPublisher, consumer messaging.SubscriptionStatusListener) *UserService {
+	return &UserService{
+		Repo:                       repo,
+		SubscriptionPublisher:      publisher,
+		SubscriptionStatusConsumer: consumer,
+	}
 }
 
 func (s *UserService) Subscribe(email string) (*models.User, error) {
@@ -46,6 +50,7 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 		log.Printf("Failed to publish subscription message. Rollbacking - Deleting user %s", user.ID.String())
 		util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 	}
+	log.Printf("Published subscription message for user %s", user.ID.String())
 
 	subscriptionStatusChan := s.SubscriptionStatusConsumer.SubscribeOnUser(user.ID)
 	defer s.SubscriptionStatusConsumer.CloseSubscription(subscriptionStatusChan)
@@ -59,6 +64,7 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 		}
 	case <-time.After(30 * time.Second):
 		util.WarnOnError(s.SubscriptionPublisher.PublishRemoveSubscription(user.ID))
+		util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 		return nil, exceptions.ErrSubscriptionTimeout
 	}
 
@@ -66,5 +72,6 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 }
 
 func (s *UserService) Unsubscribe(userId uuid.UUID) error {
+	util.WarnOnError(s.Repo.DeleteUser(userId.String()))
 	return s.SubscriptionPublisher.PublishRemoveSubscription(userId)
 }

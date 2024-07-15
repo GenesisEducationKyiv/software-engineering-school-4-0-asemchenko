@@ -9,7 +9,7 @@ import (
 
 type SubscriptionService interface {
 	CreateSubscription(userId uuid.UUID, email string) error
-	DeactivateSubscription(userId uuid.UUID) error
+	RemoveSubscription(userId uuid.UUID) error
 	GetAllActiveSubscriptions() ([]models.Subscription, error)
 }
 
@@ -30,8 +30,8 @@ func (s *service) CreateSubscription(userId uuid.UUID, email string) error {
 	})
 }
 
-func (s *service) DeactivateSubscription(userId uuid.UUID) error {
-	return s.repo.DeactivateSubscription(userId)
+func (s *service) RemoveSubscription(userId uuid.UUID) error {
+	return s.repo.RemoveSubscription(userId)
 }
 
 func (s *service) GetAllActiveSubscriptions() ([]models.Subscription, error) {

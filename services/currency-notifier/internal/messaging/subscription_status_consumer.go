@@ -3,6 +3,7 @@ package messaging
 import (
 	"currency-notifier/internal/shared/api"
 	"encoding/json"
+	"github.com/emicklei/go-restful/v3/log"
 	"github.com/google/uuid"
 	"sync"
 )
@@ -46,6 +47,7 @@ func (c *subscriptionStatusListener) Consume(message string) {
 			channel.Channel <- statusMessage
 		}
 	}
+	log.Printf("Notified all consumer on user %v about status %v", statusMessage.UserID, statusMessage.Status)
 }
 
 func (c *subscriptionStatusListener) SubscribeOnUser(userId uuid.UUID) *StatusChannel {
