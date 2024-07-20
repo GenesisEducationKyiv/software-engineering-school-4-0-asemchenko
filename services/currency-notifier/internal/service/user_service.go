@@ -19,7 +19,7 @@ func NewUserService(repo *repository.UserRepository, publisher messaging.Subscri
 }
 
 func (s *UserService) Subscribe(email string) (*models.User, error) {
-	exists, err := s.Repo.EmailExists(email)
+	exists, err := s.Repo.IsEmailExists(email)
 	if err != nil {
 		return nil, err
 	}

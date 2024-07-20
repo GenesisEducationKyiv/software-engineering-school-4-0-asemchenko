@@ -26,7 +26,7 @@ func (s *Server) GetRouter() *mux.Router {
 }
 
 func (s *Server) RegisterRoutes() {
-	subscriptionController := controller.NewSubscriptionController(s.ctx.SubscriptionService)
+	subscriptionController := controller.NewSubscriptionController(s.ctx.UserService)
 	rateController := controller.NewRateController(s.ctx.CurrencyService)
 
 	s.router.HandleFunc("/api/rate", rateController.GetRate).Methods("GET")

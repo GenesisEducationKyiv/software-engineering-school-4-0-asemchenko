@@ -8,7 +8,7 @@ import (
 )
 
 type UpdateRateSubscriber interface {
-	OnCurrencyRateUpdated(usdUahRate float64) error
+	PublishRateUpdated(usdUahRate float64) error
 }
 
 type CurrencyService struct {
@@ -54,7 +54,7 @@ func (s *CurrencyService) reloadRate() (float64, error) {
 	}
 
 	for _, subscriber := range s.subscribers {
-		err = subscriber.OnCurrencyRateUpdated(saveRate)
+		err = subscriber.PublishRateUpdated(saveRate)
 		if err != nil {
 			log.Printf("Failed to notify subscriber: %v", err)
 		}

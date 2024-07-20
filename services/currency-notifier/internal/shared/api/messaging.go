@@ -13,7 +13,7 @@ type Message struct {
 	Body string `json:"body"`
 }
 
-type RateUpdateMessage struct {
+type RateUpdatedMessage struct {
 	Currencies map[string]float64 `json:"currencies"`
 }
 
