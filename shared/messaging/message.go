@@ -1,4 +1,4 @@
-package api
+package messaging
 
 type Message struct {
 	TargetEmail  string `json:"target_email"`
