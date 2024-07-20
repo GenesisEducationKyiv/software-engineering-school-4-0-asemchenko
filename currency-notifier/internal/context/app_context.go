@@ -2,14 +2,14 @@ package context
 
 import (
 	"currency-notifier/internal/jobs"
-	"currency-notifier/internal/messaging"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/service"
 	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/service/rate_provider/monobank"
 	"currency-notifier/internal/service/rate_provider/nbu"
 	"currency-notifier/internal/service/rate_provider/privatbank"
-	"currency-notifier/internal/util"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/messaging"
+	sharedutil "github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -47,15 +47,15 @@ func (ctx *AppContext) Init() {
 	ctx.SubscriptionRepo = repository.NewSubscriptionRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
 	ctx.MessagePublisher = messaging.NewRabbitMQPublisher(
-		util.GetEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
-		util.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
+		sharedutil.GetEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+		sharedutil.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
 	)
 	ctx.MessagePublisher.Connect()
 	log.Printf("Connected to RabbitMQ")
 
-	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
-	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
-	ctx.NbuRateProvider = nbu.NewNbuRateProvider(util.GetEnv("NBU_HOST_URL", "https://bank.gov.ua"))
+	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(sharedutil.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
+	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(sharedutil.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
+	ctx.NbuRateProvider = nbu.NewNbuRateProvider(sharedutil.GetEnv("NBU_HOST_URL", "https://bank.gov.ua"))
 
 	ctx.AggregatedRateProvider = rate_provider.NewAggregatedRateProvider(
 		ctx.MonobankRateProvider,
@@ -101,11 +101,11 @@ func (ctx *AppContext) initCron() {
 
 func getDbConfig() DbConfig {
 	return DbConfig{
-		Host:     util.GetEnv("DB_HOST", "localhost"),
-		Port:     util.GetEnv("DB_PORT", "5432"),
-		User:     util.GetEnv("DB_USER", "postgres"),
-		Password: util.GetEnv("DB_PASSWORD", "postgres"),
-		Name:     util.GetEnv("DB_NAME", "currency_notifier"),
-		SSLMode:  util.GetEnv("DB_SSLMODE", "disable"),
+		Host:     sharedutil.GetEnv("DB_HOST", "localhost"),
+		Port:     sharedutil.GetEnv("DB_PORT", "5432"),
+		User:     sharedutil.GetEnv("DB_USER", "postgres"),
+		Password: sharedutil.GetEnv("DB_PASSWORD", "postgres"),
+		Name:     sharedutil.GetEnv("DB_NAME", "currency_notifier"),
+		SSLMode:  sharedutil.GetEnv("DB_SSLMODE", "disable"),
 	}
 }

@@ -1,9 +1,9 @@
 package service
 
 import (
-	"currency-notifier/internal/messaging"
 	"encoding/json"
 	"fmt"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/messaging"
 	"log"
 )
 
