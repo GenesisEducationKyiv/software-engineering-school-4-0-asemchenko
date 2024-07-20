@@ -2,9 +2,9 @@ package service
 
 import (
 	"fmt"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/messaging"
 	"gopkg.in/gomail.v2"
 	"log"
-	"notification-service/api"
 	"os"
 	"strconv"
 )
@@ -45,7 +45,7 @@ func NewEmailService() *EmailService {
 	}
 }
 
-func (s *EmailService) SendEmail(message api.Message) error {
+func (s *EmailService) SendEmail(message messaging.Message) error {
 	return s.sendEmail(message.TargetEmail, message.Subject, message.MessagePlain, message.MessageHtml)
 }
 

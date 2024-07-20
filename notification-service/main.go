@@ -2,11 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/messaging"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"log"
-	"notification-service/api"
-	"notification-service/internal/messaging"
 	"notification-service/internal/service"
-	"notification-service/internal/util"
 )
 
 func main() {
@@ -30,7 +29,7 @@ func main() {
 	}
 
 	for msg := range messagesChannel {
-		var emailMessage api.Message
+		var emailMessage messaging.Message
 		err := json.Unmarshal(msg.Body, &emailMessage)
 		if err != nil {
 			log.Printf("Failed to parse message: %v", err)
