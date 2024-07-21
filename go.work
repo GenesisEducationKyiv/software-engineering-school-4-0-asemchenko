@@ -2,6 +2,6 @@ go 1.22.3
 
 use (
 	./shared
-		./currency-notifier
-		./notification-service
+		./services/currency-notifier
+		./services/notification-service
 )

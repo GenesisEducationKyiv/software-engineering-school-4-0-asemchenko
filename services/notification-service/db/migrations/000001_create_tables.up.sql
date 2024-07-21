@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS subscriptions
+(
+    id         UUID PRIMARY KEY,
+    email      TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active  BOOLEAN   DEFAULT TRUE
+);
