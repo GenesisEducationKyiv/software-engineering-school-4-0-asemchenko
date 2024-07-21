@@ -9,8 +9,8 @@ import (
 	"currency-notifier/internal/service/rate_provider/monobank"
 	"currency-notifier/internal/service/rate_provider/nbu"
 	"currency-notifier/internal/service/rate_provider/privatbank"
-	"currency-notifier/internal/shared/db"
-	"currency-notifier/internal/shared/util"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/db"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/robfig/cron/v3"
 	"log"
 )

@@ -2,9 +2,9 @@ package consumers
 
 import (
 	"encoding/json"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 	"notification-service/internal/messaging"
-	"notification-service/internal/shared/api"
 )
 
 type ConsumerController interface {

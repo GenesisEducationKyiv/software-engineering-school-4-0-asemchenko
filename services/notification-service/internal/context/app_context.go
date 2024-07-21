@@ -1,6 +1,8 @@
 package context
 
 import (
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/db"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/robfig/cron/v3"
 	"log"
 	"notification-service/internal/consumers"
@@ -8,8 +10,6 @@ import (
 	"notification-service/internal/messaging"
 	"notification-service/internal/repository"
 	"notification-service/internal/service"
-	"notification-service/internal/shared/db"
-	"notification-service/internal/shared/util"
 )
 
 type AppContext struct {

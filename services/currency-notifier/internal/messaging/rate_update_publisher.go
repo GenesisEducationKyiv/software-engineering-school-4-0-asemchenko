@@ -1,8 +1,8 @@
 package messaging
 
 import (
-	"currency-notifier/internal/shared/api"
 	"encoding/json"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 )
 

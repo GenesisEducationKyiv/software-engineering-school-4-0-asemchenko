@@ -2,9 +2,9 @@ package consumers
 
 import (
 	"encoding/json"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 	"notification-service/internal/service"
-	"notification-service/internal/shared/api"
 )
 
 type RateUpdateConsumer struct {
@@ -18,7 +18,7 @@ func NewRateUpdateConsumer(rateStorage service.RateStorage) *RateUpdateConsumer 
 }
 
 func (c *RateUpdateConsumer) Consume(message string) {
-	var msg api.RateUpdateMessage
+	var msg api.RateUpdatedMessage
 	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
 		log.Printf("Failed to parse message: %v", err)

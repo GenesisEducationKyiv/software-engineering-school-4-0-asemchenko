@@ -18,8 +18,8 @@ type RateUpdatedMessage struct {
 }
 
 type AddSubscriptionMessage struct {
-	Email  string    `json:"email"`
 	UserID uuid.UUID `json:"user_id"`
+	Email  string    `json:"email"`
 }
 
 type RemoveSubscriptionMessage struct {
