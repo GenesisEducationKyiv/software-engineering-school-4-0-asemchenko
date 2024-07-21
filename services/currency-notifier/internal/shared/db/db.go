@@ -1,10 +1,10 @@
 package db
 
 import (
-	"currency-notifier/internal/shared/util"
 	"database/sql"
 	"errors"
 	"fmt"
+	sharedutil "github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -69,7 +69,7 @@ func (d *Db) migrate() error {
 	}
 
 	m, err := migrate.NewWithDatabaseInstance(
-		util.GetEnv("MIGRATIONS_PATH", "file://./db/migrations"),
+		sharedutil.GetEnv("MIGRATIONS_PATH", "file://./db/migrations"),
 		"postgres", driver)
 	if err != nil {
 		return fmt.Errorf("could not start migration: %w", err)

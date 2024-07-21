@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/messaging"
 	"gopkg.in/gomail.v2"
 	"log"
 	"os"
@@ -44,12 +45,8 @@ func NewEmailService() *EmailService {
 	}
 }
 
-func (s *EmailService) SendCurrencyRateEmail(to string, rate float64) error {
-	subject := "Currency Rate Alert"
-	plainTextContent := fmt.Sprintf("The current USD to UAH rate is %.2f.", rate)
-	htmlContent := fmt.Sprintf("<strong>The current USD to UAH rate is %.2f.</strong>", rate)
-
-	return s.sendEmail(to, subject, plainTextContent, htmlContent)
+func (s *EmailService) SendEmail(message messaging.Message) error {
+	return s.sendEmail(message.TargetEmail, message.Subject, message.MessagePlain, message.MessageHtml)
 }
 
 func (s *EmailService) sendEmail(to string, subject string, plainTextContent string, htmlContent string) error {
