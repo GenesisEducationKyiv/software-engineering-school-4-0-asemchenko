@@ -2,7 +2,7 @@ package rate_provider
 
 import (
 	"fmt"
-	"log"
+	"go.uber.org/zap"
 )
 
 type aggregatedRateProvider struct {
@@ -34,9 +34,9 @@ func (s *aggregatedRateProvider) GetName() string {
 func getRateFromProvider(provider RateProvider) (float64, error) {
 	rate, err := provider.FetchRateFromAPI()
 	if err != nil {
-		log.Printf("Failed to fetch rate from %s: %s\n", provider.GetName(), err)
+		zap.S().Warnf("Failed to fetch rate from %s: %s\n", provider.GetName(), err)
 	} else {
-		log.Printf("Fetched rate from %s: %f\n", provider.GetName(), rate)
+		zap.S().Debugf("Fetched rate from %s: %f\n", provider.GetName(), rate)
 	}
 
 	return rate, err

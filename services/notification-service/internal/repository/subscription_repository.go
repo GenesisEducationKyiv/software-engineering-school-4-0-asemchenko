@@ -3,7 +3,7 @@ package repository
 import (
 	"database/sql"
 	"github.com/google/uuid"
-	"log"
+	"go.uber.org/zap"
 	"notification-service/internal/models"
 )
 
@@ -24,13 +24,13 @@ func (r *SubscriptionRepository) CreateSubscription(subscription *models.Subscri
 func (r *SubscriptionRepository) GetAllActiveSubscriptions() ([]models.Subscription, error) {
 	rows, err := r.DB.Query("SELECT id, email, created_at, is_active FROM subscriptions WHERE is_active=true")
 	if err != nil {
-		log.Printf("Error fetching subscriptions: %v", err)
+		zap.S().Errorf("Error fetching subscriptions: %v", err)
 		return nil, err
 	}
 	defer func(rows *sql.Rows) {
 		err = rows.Close()
 		if err != nil {
-			log.Fatal(err)
+			zap.S().Warnf("Faild to close DB rows %v", err)
 		}
 	}(rows)
 
@@ -38,13 +38,13 @@ func (r *SubscriptionRepository) GetAllActiveSubscriptions() ([]models.Subscript
 	for rows.Next() {
 		var subscription models.Subscription
 		if err = rows.Scan(&subscription.ID, &subscription.Email, &subscription.CreatedAt, &subscription.IsActive); err != nil {
-			log.Printf("Error scanning subscription: %v", err)
+			zap.S().Errorf("Error scanning subscription: %v", err)
 			continue
 		}
 		subscriptions = append(subscriptions, subscription)
 	}
 	if err = rows.Err(); err != nil {
-		log.Printf("Error with rows in GetAllSubscriptions: %v", err)
+		zap.S().Errorf("Error with rows in GetAllSubscriptions: %v", err)
 		return nil, err
 	}
 	return subscriptions, nil

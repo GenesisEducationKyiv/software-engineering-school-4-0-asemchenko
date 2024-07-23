@@ -2,7 +2,7 @@ package integration_tests
 
 import (
 	"context"
-	"log"
+	"go.uber.org/zap"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +27,7 @@ func DockerComposeUp(t *testing.T) {
 	startDockerCompose(t, ctx)
 	setEnvironmentVariables(t)
 	waitForServices(t, ctx)
-	log.Printf("All environment services are up and running")
+	zap.S().Info("All environment services are up and running")
 }
 
 func DockerComposeDown(t *testing.T) {
@@ -66,9 +66,9 @@ func waitForServices(t *testing.T, ctx context.Context) {
 
 	// Waiting for services to be healthy
 	handleError(t, composeInstance.WaitForService("db", wait.ForHealthCheck()).Up(ctx, compose.Wait(true)))
-	log.Printf("Database is up and running")
+	zap.S().Info("Database is up and running")
 	handleError(t, composeInstance.WaitForService("wiremock", wait.ForHealthCheck()).Up(ctx, compose.Wait(true)))
-	log.Printf("WireMock is up and running")
+	zap.S().Info("WireMock is up and running")
 }
 
 func handleError(t *testing.T, err error) {

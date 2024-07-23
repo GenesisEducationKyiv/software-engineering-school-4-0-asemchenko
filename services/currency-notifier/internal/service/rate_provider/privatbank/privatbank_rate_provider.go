@@ -4,7 +4,7 @@ import (
 	"currency-notifier/internal/service/rate_provider"
 	"encoding/json"
 	"errors"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -38,7 +38,7 @@ func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Printf("privatbank rates: %v", rates)
+	zap.S().Debugf("privatbank rates: %v", rates)
 
 	return findUahRate(rates)
 }

@@ -2,7 +2,7 @@ package service
 
 import (
 	"errors"
-	"log"
+	"go.uber.org/zap"
 )
 
 var (
@@ -25,7 +25,7 @@ func NewRateStorage() RateStorage {
 }
 
 func (s *storage) SaveRate(rateCode string, rate float64) {
-	log.Printf("Saving rate %s: %f", rateCode, rate)
+	zap.S().Debugf("Saving rate %s: %f", rateCode, rate)
 	s.rates[rateCode] = rate
 }
 

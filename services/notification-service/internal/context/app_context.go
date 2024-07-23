@@ -2,7 +2,7 @@ package context
 
 import (
 	"github.com/robfig/cron/v3"
-	"log"
+	"go.uber.org/zap"
 	"notification-service/internal/consumers"
 	"notification-service/internal/jobs"
 	"notification-service/internal/messaging"
@@ -57,9 +57,9 @@ func (ctx *AppContext) Init() {
 	ctx.rabbitMqClient = messaging.NewRabbitMQConsumer(getRabbitMQConnectionUrl())
 	err := ctx.rabbitMqClient.Connect()
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		zap.S().Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
-	log.Printf("Connected to RabbitMQ")
+	zap.S().Info("Connected to RabbitMQ")
 
 	ctx.subscriptionStatusPublisher = publishers.NewSubscriptionPublisher(
 		ctx.rabbitMqClient,
@@ -89,14 +89,14 @@ func (ctx *AppContext) Close() {
 	ctx.cronInstance.Stop()
 	err := ctx.rabbitMqClient.Close()
 	if err != nil {
-		log.Printf("Failed to close RabbitMQ connection: %v", err)
+		zap.S().Warnf("Failed to close RabbitMQ connection: %v", err)
 	}
 }
 
 func getDbConfig() db.DbConfig {
 	return db.DbConfig{
 		Host:     util.GetEnv("DB_HOST", "localhost"),
-		Port:     util.GetEnv("DB_PORT", "5432"),
+		Port:     util.GetEnv("DB_PORT", "5433"),
 		User:     util.GetEnv("DB_USER", "root"),
 		Password: util.GetEnv("DB_PASSWORD", "password"),
 		Name:     util.GetEnv("DB_NAME", "notification_service"),
@@ -109,7 +109,7 @@ func (ctx *AppContext) initCron() {
 
 	_, err := ctx.cronInstance.AddFunc(util.GetEnv("EMAIL_CRON_CONFIG", "@daily"), ctx.sendEmailJob.SendEmails)
 	if err != nil {
-		log.Fatal()
+		zap.S().Fatalf("Failed to add sendEmail cron job %v", err)
 	}
 
 	ctx.cronInstance.Start()

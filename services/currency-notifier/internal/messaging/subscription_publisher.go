@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"currency-notifier/internal/metrics"
 	"currency-notifier/internal/shared/api"
 	"encoding/json"
 	"github.com/google/uuid"
@@ -45,7 +46,13 @@ func (p *subscriptionPublisher) PublishAddSubscription(id uuid.UUID, email strin
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	err = p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	if err != nil {
+		return err
+	}
+	metrics.RabbitMQSentMessages.WithLabelValues(api.MessageTypeAddSubscription).Inc()
+
+	return err
 }
 
 func (p *subscriptionPublisher) PublishRemoveSubscription(id uuid.UUID) error {
@@ -68,5 +75,11 @@ func (p *subscriptionPublisher) PublishRemoveSubscription(id uuid.UUID) error {
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	err = p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	if err != nil {
+		return err
+	}
+	metrics.RabbitMQSentMessages.WithLabelValues(api.MessageTypeRemoveSubscription).Inc()
+
+	return err
 }

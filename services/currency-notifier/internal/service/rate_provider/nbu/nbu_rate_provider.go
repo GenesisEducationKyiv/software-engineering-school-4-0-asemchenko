@@ -5,7 +5,7 @@ import (
 	"currency-notifier/internal/util"
 	"encoding/json"
 	"errors"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -39,7 +39,7 @@ func (p *rateProvider) FetchRateFromAPI() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Printf("nbu rates: %v", rates)
+	zap.S().Debugf("nbu rates: %v", rates)
 
 	return findNbuUsdRate(rates)
 }

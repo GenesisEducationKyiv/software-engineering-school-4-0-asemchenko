@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bojanz/currency"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 )
@@ -63,7 +63,7 @@ func extractRates(resp *http.Response) ([]currencyRate, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&rates); err != nil {
 		return nil, err
 	}
-	log.Printf("monobank rates: %v", rates)
+	zap.S().Debugf("monobank rates: %v", rates)
 
 	return rates, nil
 }
@@ -81,12 +81,12 @@ func findUahRate(rates []currencyRate) (float64, error) {
 func getCurrencyCode(currencyCode string) int {
 	code, ok := currency.GetNumericCode(currencyCode)
 	if !ok {
-		log.Fatal("Currency code not found")
+		zap.S().Fatal("Currency code not found")
 	}
 
 	numericCode, err := strconv.Atoi(code)
 	if err != nil {
-		log.Fatal("Currency code is not a number")
+		zap.S().Fatal("Currency code is not a number")
 	}
 
 	return numericCode

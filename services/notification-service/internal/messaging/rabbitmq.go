@@ -2,7 +2,7 @@ package messaging
 
 import (
 	"github.com/streadway/amqp"
-	"log"
+	"go.uber.org/zap"
 )
 
 type RabbitMqClient struct {
@@ -67,7 +67,7 @@ func (c *RabbitMqClient) PublishMessage(messageBody []byte, queueName string) er
 		},
 	)
 	if err != nil {
-		log.Printf("Failed to publish message: %v", err)
+		zap.S().Errorf("Failed to publish message: %v", err)
 		return err
 	}
 

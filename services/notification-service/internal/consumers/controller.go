@@ -2,8 +2,9 @@ package consumers
 
 import (
 	"encoding/json"
-	"log"
+	"go.uber.org/zap"
 	"notification-service/internal/messaging"
+	"notification-service/internal/metrics"
 	"notification-service/internal/shared/api"
 	"notification-service/internal/util"
 )
@@ -27,7 +28,7 @@ func NewConsumerController(
 	removeSubscriptionConsumer RemoveSubscriptionConsumer,
 	queueName string,
 ) ConsumerController {
-	util.WarnOnError(rabbitMqConsumer.DeclareQueue(queueName))
+	util.LogError(rabbitMqConsumer.DeclareQueue(queueName))
 	return &consumerController{
 		rabbitMqConsumer:           rabbitMqConsumer,
 		rateUpdateConsumer:         rateUpdateConsumer,
@@ -40,7 +41,7 @@ func NewConsumerController(
 func (c *consumerController) StartConsuming() {
 	messagesChannel, err := c.rabbitMqConsumer.Consume(c.queueName)
 	if err != nil {
-		log.Fatalf("Failed to consume messages: %v", err)
+		zap.S().Fatalf("Failed to consume messages: %v", err)
 	}
 
 	for msg := range messagesChannel {
@@ -53,9 +54,11 @@ func (c *consumerController) Consume(message []byte) {
 	var msg api.Message
 	err := json.Unmarshal(message, &msg)
 	if err != nil {
-		log.Printf("Failed to parse message: %v", err)
+		zap.S().Warnf("Failed to parse message: %v", err)
 		return
 	}
+
+	metrics.RabbitMQReceivedMessages.WithLabelValues(msg.Type).Inc()
 
 	switch msg.Type {
 	case api.MessageTypeRateUpdate:
@@ -65,6 +68,6 @@ func (c *consumerController) Consume(message []byte) {
 	case api.MessageTypeRemoveSubscription:
 		c.removeSubscriptionConsumer.Consume(msg.Body)
 	default:
-		log.Printf("Unknown message type: %v", msg.Type)
+		zap.S().Warnf("Unknown message type: %v", msg.Type)
 	}
 }

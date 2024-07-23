@@ -1,19 +1,19 @@
 package util
 
 import (
-	"log"
+	"go.uber.org/zap"
 	"notification-service/internal/messaging"
 )
 
 func CloseRabbitMQ(consumer *messaging.RabbitMqClient) {
 	err := consumer.Close()
 	if err != nil {
-		log.Fatalf("Failed to close RabbitMQ connection: %v", err)
+		zap.S().Warnf("Failed to close RabbitMQ connection: %v", err)
 	}
 }
 
-func WarnOnError(err error) {
+func LogError(err error) {
 	if err != nil {
-		log.Printf("Error occurred: %v", err)
+		zap.S().Errorf("Error occurred: %v", err)
 	}
 }

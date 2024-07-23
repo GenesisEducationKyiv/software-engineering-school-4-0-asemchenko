@@ -1,9 +1,10 @@
 package messaging
 
 import (
+	"currency-notifier/internal/metrics"
 	"currency-notifier/internal/shared/api"
 	"encoding/json"
-	"log"
+	"go.uber.org/zap"
 )
 
 type RatePublisher struct {
@@ -20,7 +21,7 @@ func NewRatePublisher(publisher *RabbitMqClient, queueName string) *RatePublishe
 }
 
 func (p *RatePublisher) PublishRateUpdated(usdUahRate float64) error {
-	log.Printf("Sending rate update message: %v", usdUahRate)
+	zap.S().Debugf("Sending rate update message: %v", usdUahRate)
 	rateUpdateMessage := api.RateUpdatedMessage{
 		Currencies: map[string]float64{
 			"usd_uah": usdUahRate,
@@ -42,5 +43,11 @@ func (p *RatePublisher) PublishRateUpdated(usdUahRate float64) error {
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	err = p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	if err != nil {
+		return err
+	}
+	metrics.RabbitMQSentMessages.WithLabelValues(api.MessageTypeRateUpdate).Inc()
+
+	return err
 }

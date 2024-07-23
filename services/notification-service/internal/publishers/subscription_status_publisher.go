@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"notification-service/internal/messaging"
+	"notification-service/internal/metrics"
 	"notification-service/internal/shared/api"
 	"notification-service/internal/util"
 )
@@ -18,7 +19,7 @@ type subscriptionPublisher struct {
 }
 
 func NewSubscriptionPublisher(publisher *messaging.RabbitMqClient, queueName string) SubscriptionStatusPublisher {
-	util.WarnOnError(publisher.DeclareQueue(queueName))
+	util.LogError(publisher.DeclareQueue(queueName))
 	return &subscriptionPublisher{
 		rabbitMqPublisher: publisher,
 		queueName:         queueName,
@@ -46,5 +47,11 @@ func (p *subscriptionPublisher) PublishSubscriptionStatus(userId uuid.UUID, stat
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	err = p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
+	if err != nil {
+		return err
+	}
+	metrics.RabbitMQSentMessages.WithLabelValues(api.MessageTypeSubscriptionStatus).Inc()
+
+	return nil
 }

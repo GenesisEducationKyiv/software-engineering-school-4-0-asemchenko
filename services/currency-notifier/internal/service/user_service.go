@@ -6,8 +6,8 @@ import (
 	"currency-notifier/internal/models"
 	"currency-notifier/internal/repository"
 	"currency-notifier/internal/util"
-	"github.com/emicklei/go-restful/v3/log"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -47,19 +47,19 @@ func (s *UserService) Subscribe(email string) (*models.User, error) {
 
 	err = s.SubscriptionPublisher.PublishAddSubscription(user.ID, user.Email)
 	if err != nil {
-		log.Printf("Failed to publish subscription message. Rollbacking - Deleting user %s", user.ID.String())
+		zap.S().Warnf("Failed to publish subscription message. Rollbacking - Deleting user %s", user.ID.String())
 		util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 	}
-	log.Printf("Published subscription message for user %s", user.ID.String())
+	zap.S().Debugf("Published subscription message for user %s", user.ID.String())
 
 	subscriptionStatusChan := s.SubscriptionStatusConsumer.SubscribeOnUser(user.ID)
 	defer s.SubscriptionStatusConsumer.CloseSubscription(subscriptionStatusChan)
 
 	select {
 	case status := <-subscriptionStatusChan.Channel:
-		log.Printf("Got subscription status: %v", status)
+		zap.S().Debugf("Got subscription status: %v", status)
 		if !status.IsSuccessfullyCreated() {
-			log.Printf("Failed to create subscription: %v. Rollbacking - Deleting user %s", status.Details, user.ID.String())
+			zap.S().Warnf("Failed to create subscription: %v. Rollbacking - Deleting user %s", status.Details, user.ID.String())
 			util.WarnOnError(s.Repo.DeleteUser(user.ID.String()))
 			return nil, exceptions.ErrSubscriptionFailed(status.Details)
 		}

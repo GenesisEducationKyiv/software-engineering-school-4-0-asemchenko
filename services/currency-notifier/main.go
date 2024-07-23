@@ -3,9 +3,10 @@ package main
 import (
 	_ "currency-notifier/docs"
 	"currency-notifier/internal/context"
+	"currency-notifier/internal/metrics"
 	"currency-notifier/internal/server"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"log"
+	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,12 +21,28 @@ import (
 //go:generate go run github.com/swaggo/swag/cmd/swag init
 
 func main() {
+	metrics.Init()
+
+	logger, err := zap.NewProduction()
+	if err != nil {
+		zap.S().Fatalf("Failed to create logger: %v", err)
+	}
+	defer func(logger *zap.Logger) {
+		err := logger.Sync()
+		if err != nil {
+			zap.S().Errorf("Failed to sync logger: %v", err)
+		}
+	}(logger)
+	zap.ReplaceGlobals(logger)
+
 	appCtx := context.NewAppContext()
 
 	appCtx.Init()
 
 	s := server.NewServer(appCtx)
 	s.RegisterRoutes()
+	s.RegisterMetrics()
+
 	go s.StartListening()
 
 	// graceful shutdown
@@ -33,6 +50,6 @@ func main() {
 	signal.Notify(finish, os.Interrupt, syscall.SIGTERM)
 
 	<-finish
-	log.Printf("Shutting down the server...")
+	zap.S().Info("Shutting down the server...")
 	appCtx.Close()
 }
