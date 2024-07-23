@@ -47,7 +47,7 @@ func (d *Db) Init() {
 	}
 
 	if err != nil {
-		zap.S().Fatalf("Failed to initialize DB: %v", err)
+		zap.S().Fatalf("Failed to migrate DB: %v", err)
 	}
 }
 

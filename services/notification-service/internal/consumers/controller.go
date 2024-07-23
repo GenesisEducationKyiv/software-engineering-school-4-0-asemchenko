@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"go.uber.org/zap"
 	"notification-service/internal/messaging"
+	"notification-service/internal/metrics"
 	"notification-service/internal/shared/api"
 	"notification-service/internal/util"
 )
@@ -56,6 +57,8 @@ func (c *consumerController) Consume(message []byte) {
 		zap.S().Warnf("Failed to parse message: %v", err)
 		return
 	}
+
+	metrics.RabbitMQReceivedMessages.WithLabelValues(msg.Type).Inc()
 
 	switch msg.Type {
 	case api.MessageTypeRateUpdate:

@@ -96,7 +96,7 @@ func (ctx *AppContext) Close() {
 func getDbConfig() db.DbConfig {
 	return db.DbConfig{
 		Host:     util.GetEnv("DB_HOST", "localhost"),
-		Port:     util.GetEnv("DB_PORT", "5432"),
+		Port:     util.GetEnv("DB_PORT", "5433"),
 		User:     util.GetEnv("DB_USER", "root"),
 		Password: util.GetEnv("DB_PASSWORD", "password"),
 		Name:     util.GetEnv("DB_NAME", "notification_service"),

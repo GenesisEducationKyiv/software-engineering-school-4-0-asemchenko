@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"gopkg.in/gomail.v2"
+	"notification-service/internal/metrics"
 	"os"
 	"strconv"
 )
@@ -49,7 +50,13 @@ func (s *EmailService) SendCurrencyRateEmail(to string, rate float64) error {
 	plainTextContent := fmt.Sprintf("The current USD to UAH rate is %.2f.", rate)
 	htmlContent := fmt.Sprintf("<strong>The current USD to UAH rate is %.2f.</strong>", rate)
 
-	return s.sendEmail(to, subject, plainTextContent, htmlContent)
+	err := s.sendEmail(to, subject, plainTextContent, htmlContent)
+	if err != nil {
+		return err
+	}
+	metrics.NotificationsSent.WithLabelValues("email").Inc()
+
+	return err
 }
 
 func (s *EmailService) sendEmail(to string, subject string, plainTextContent string, htmlContent string) error {
