@@ -1,14 +1,10 @@
 package db
 
 import (
-<<<<<<<< HEAD:services/currency-notifier/internal/shared/db/db.go
 	"currency-notifier/internal/shared/util"
-========
->>>>>>>> 6dc618d5cab8567e9f9ce4f4574af9951fbaccbd:shared/db/db.go
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"

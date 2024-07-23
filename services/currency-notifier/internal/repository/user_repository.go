@@ -25,7 +25,7 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 	return err
 }
 
-func (r *UserRepository) EmailExists(email string) (bool, error) {
+func (r *UserRepository) IsEmailExists(email string) (bool, error) {
 	query := "SELECT EXISTS (SELECT 1 FROM users WHERE email=$1)"
 	var exists bool
 	err := r.DB.QueryRow(query, email).Scan(&exists)

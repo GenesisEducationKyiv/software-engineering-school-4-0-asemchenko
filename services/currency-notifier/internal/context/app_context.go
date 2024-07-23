@@ -34,8 +34,8 @@ type AppContext struct {
 
 	AggregatedRateProvider rate_provider.RateProvider
 
-	SubscriptionService *service.UserService
-	CurrencyService     *service.CurrencyService
+	UserService     *service.UserService
+	CurrencyService *service.CurrencyService
 
 	UpdateRateJob *jobs.UpdateRateJob
 }
@@ -81,7 +81,7 @@ func (ctx *AppContext) Init() {
 		ctx.NbuRateProvider,
 	)
 
-	ctx.SubscriptionService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher, ctx.SubscriptionStatusListener)
+	ctx.UserService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher, ctx.SubscriptionStatusListener)
 	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.AggregatedRateProvider)
 	ctx.CurrencyService.AddSubscriber(ctx.RateUpdatePublisher)
 

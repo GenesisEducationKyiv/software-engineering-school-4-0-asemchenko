@@ -19,9 +19,9 @@ func NewRatePublisher(publisher *RabbitMqClient, queueName string) *RatePublishe
 	}
 }
 
-func (p *RatePublisher) OnCurrencyRateUpdated(usdUahRate float64) error {
+func (p *RatePublisher) PublishRateUpdated(usdUahRate float64) error {
 	log.Printf("Sending rate update message: %v", usdUahRate)
-	rateUpdateMessage := api.RateUpdateMessage{
+	rateUpdateMessage := api.RateUpdatedMessage{
 		Currencies: map[string]float64{
 			"usd_uah": usdUahRate,
 		},
