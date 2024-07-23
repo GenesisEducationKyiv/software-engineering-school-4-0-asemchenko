@@ -94,3 +94,32 @@ Every hour the service sends a request to the monobank API and updates the cache
 
 Every day service sends an email with the currency rate to the user.
 It uses the latest currency rate from the cache.
+
+# Observability
+
+## currency-notifier alerts
+
+1) **CPU Usage**: Alert when CPU usage exceeds a certain threshold, indicating potential performance issues.
+1) **Memory Usage**: Alert when memory usage is high, indicating potential performance issues or memory leaks.
+1) **Database Connection Errors**: Alert when the service cannot connect to the database, a serious issue that needs
+   immediate attention.
+1) **RabbitMQ Connection Errors**: Alert when the service cannot connect to RabbitMQ, another serious issue.
+1) **High/Low Number of Sent RabbitMQ Messages (`rabbitmq_sent_messages_total`)**: Alert when the number of messages
+   sent to RabbitMQ is unusually high/low, indicating potential issues or increased load.
+1) **High/Low Number of Received RabbitMQ Messages (`rabbitmq_received_messages_total`)**: Alert when the service is
+   receiving an unusually high/low number of messages from RabbitMQ, indicating potential issues or increased load.
+1) **High Duration
+   ** (`api_rate_duration_seconds`, `api_subscribe_duration_seconds`, `api_unsubscribe_duration_seconds`): Alert when
+   the duration of requests is unusually high, indicating potential performance issues.
+
+## notification-service alerts
+
+1) **CPU Usage**: Alert when CPU usage exceeds a certain threshold, indicating potential performance issues.
+1) **Memory Usage**: Alert when memory usage is high, indicating potential performance issues or memory leaks.
+1) **RabbitMQ Connection Errors**: Alert when the service cannot connect to RabbitMQ, another serious issue.
+1) **High/Low Number of Sent RabbitMQ Messages** (`rabbitmq_sent_messages_total`): Alert when the number of messages
+   sent to RabbitMQ is unusually high/low, indicating potential issues or increased load.
+1) **High/Low Number of Received RabbitMQ Messages** (`rabbitmq_received_messages_total`): Alert when the service is
+   receiving an unusually high/low number of messages from RabbitMQ, indicating potential issues or increased load.
+1) **High/Low Number of Sent Notifications (`notifications_sent_total`)**: Alert when the number of notifications sent
+   is unusually high/low, indicating potential issues or increased load.

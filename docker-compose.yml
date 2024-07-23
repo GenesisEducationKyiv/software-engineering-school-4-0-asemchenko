@@ -68,6 +68,8 @@ services:
     restart: always
     env_file:
       - services/notification-service/.env-local
+    ports:
+      - "8082:8082"
     depends_on:
       notification_service_db:
         condition: service_healthy
