@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"currency-notifier/internal/metrics"
 	"currency-notifier/internal/shared/api"
 	"encoding/json"
 	"go.uber.org/zap"
@@ -46,6 +47,7 @@ func (c *consumerController) Consume(message []byte) {
 		return
 	}
 
+	metrics.RabbitMQReceivedMessages.WithLabelValues(msg.Type).Inc()
 	switch msg.Type {
 	case api.MessageTypeSubscriptionStatus:
 		c.subscriptionStatusConsumer.Consume(msg.Body)

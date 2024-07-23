@@ -3,6 +3,7 @@ package main
 import (
 	_ "currency-notifier/docs"
 	"currency-notifier/internal/context"
+	"currency-notifier/internal/metrics"
 	"currency-notifier/internal/server"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"go.uber.org/zap"
@@ -20,6 +21,8 @@ import (
 //go:generate go run github.com/swaggo/swag/cmd/swag init
 
 func main() {
+	metrics.Init()
+
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	zap.ReplaceGlobals(logger)
@@ -30,6 +33,8 @@ func main() {
 
 	s := server.NewServer(appCtx)
 	s.RegisterRoutes()
+	s.RegisterMetrics()
+
 	go s.StartListening()
 
 	// graceful shutdown
