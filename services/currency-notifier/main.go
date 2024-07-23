@@ -23,8 +23,16 @@ import (
 func main() {
 	metrics.Init()
 
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	logger, err := zap.NewProduction()
+	if err != nil {
+		zap.S().Fatalf("Failed to create logger: %v", err)
+	}
+	defer func(logger *zap.Logger) {
+		err := logger.Sync()
+		if err != nil {
+			zap.S().Errorf("Failed to sync logger: %v", err)
+		}
+	}(logger)
 	zap.ReplaceGlobals(logger)
 
 	appCtx := context.NewAppContext()
