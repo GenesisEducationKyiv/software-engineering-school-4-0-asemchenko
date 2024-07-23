@@ -2,7 +2,7 @@ package jobs
 
 import (
 	"currency-notifier/internal/service"
-	"log"
+	"go.uber.org/zap"
 )
 
 type UpdateRateJob struct {
@@ -16,10 +16,10 @@ func NewUpdateRateJob(currencyService *service.CurrencyService) *UpdateRateJob {
 }
 
 func (j UpdateRateJob) UpdateExchangeRate() {
-	log.Printf("Reloading exchange rate")
+	zap.S().Debugf("Reloading exchange rate")
 	err := j.currencyService.ReloadRate()
 	if err != nil {
-		log.Printf("Error fetching exchange rate: %v", err)
+		zap.S().Errorf("Error fetching exchange rate: %v", err)
 		return
 	}
 }

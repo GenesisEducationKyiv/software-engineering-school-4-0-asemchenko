@@ -18,7 +18,7 @@ type subscriptionPublisher struct {
 }
 
 func NewSubscriptionPublisher(publisher *messaging.RabbitMqClient, queueName string) SubscriptionStatusPublisher {
-	util.WarnOnError(publisher.DeclareQueue(queueName))
+	util.LogError(publisher.DeclareQueue(queueName))
 	return &subscriptionPublisher{
 		rabbitMqPublisher: publisher,
 		queueName:         queueName,

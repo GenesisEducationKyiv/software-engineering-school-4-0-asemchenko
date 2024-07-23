@@ -8,7 +8,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"log"
+	"go.uber.org/zap"
 )
 
 type DbConfig struct {
@@ -32,7 +32,7 @@ func NewDb(config DbConfig) *Db {
 }
 
 func (d *Db) Init() {
-	log.Printf("Connecting to database %s:%s as user %s to database %s\n",
+	zap.S().Infof("Connecting to database %s:%s as user %s to database %s\n",
 		d.config.Host, d.config.Port, d.config.User, d.config.Name)
 
 	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
@@ -40,21 +40,21 @@ func (d *Db) Init() {
 
 	var err error
 	d.db, err = sql.Open("postgres", connStr)
-	log.Printf("Connected to database ")
+	zap.S().Info("Connected to database ")
 
 	if err == nil {
 		err = d.migrate()
 	}
 
 	if err != nil {
-		log.Fatal("Failed to initialize DB: ", err)
+		zap.S().Fatalf("Failed to initialize DB: %v", err)
 	}
 }
 
 func (d *Db) Close() {
 	err := d.db.Close()
 	if err != nil {
-		log.Fatal(err)
+		zap.S().Fatalf("Failed to close DB connection %v", err)
 	}
 }
 
@@ -79,7 +79,7 @@ func (d *Db) migrate() error {
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("could not run up migrations: %w", err)
 	}
-	log.Println("Migrations ran successfully")
+	zap.S().Infof("Migrations ran successfully")
 
 	return nil
 }

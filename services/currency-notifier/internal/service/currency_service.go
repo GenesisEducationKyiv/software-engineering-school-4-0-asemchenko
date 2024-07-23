@@ -3,7 +3,7 @@ package service
 import (
 	"currency-notifier/internal/service/rate_provider"
 	"currency-notifier/internal/util"
-	"log"
+	"go.uber.org/zap"
 	"time"
 )
 
@@ -56,7 +56,7 @@ func (s *CurrencyService) reloadRate() (float64, error) {
 	for _, subscriber := range s.subscribers {
 		err = subscriber.PublishRateUpdated(saveRate)
 		if err != nil {
-			log.Printf("Failed to notify subscriber: %v", err)
+			zap.S().Warnf("Failed to notify subscriber: %v", err)
 		}
 	}
 
@@ -64,7 +64,7 @@ func (s *CurrencyService) reloadRate() (float64, error) {
 }
 
 func (s *CurrencyService) saveRate(rate float64) (float64, error) {
-	log.Printf("USD to UAH rate: %f", rate)
+	zap.S().Debugf("USD to UAH rate: %f", rate)
 
 	s.latestRate.Set(rate)
 
@@ -73,7 +73,7 @@ func (s *CurrencyService) saveRate(rate float64) (float64, error) {
 		return 0, err
 	}
 
-	log.Printf("USD to UAH rate saved to the database")
+	zap.S().Debugf("USD to UAH rate saved to the database")
 	return rate, nil
 }
 

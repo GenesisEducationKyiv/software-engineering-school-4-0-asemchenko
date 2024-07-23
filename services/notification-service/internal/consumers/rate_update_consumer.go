@@ -2,7 +2,7 @@ package consumers
 
 import (
 	"encoding/json"
-	"log"
+	"go.uber.org/zap"
 	"notification-service/internal/service"
 	"notification-service/internal/shared/api"
 )
@@ -21,11 +21,11 @@ func (c *RateUpdateConsumer) Consume(message string) {
 	var msg api.RateUpdateMessage
 	err := json.Unmarshal([]byte(message), &msg)
 	if err != nil {
-		log.Printf("Failed to parse message: %v", err)
+		zap.S().Warnf("Failed to parse message: %v", err)
 		return
 	}
 
-	log.Printf("Received rate update message: %v", msg.Currencies)
+	zap.S().Debugf("Received rate update message: %v", msg.Currencies)
 	for s := range msg.Currencies {
 		c.rateStorage.SaveRate(s, msg.Currencies[s])
 	}

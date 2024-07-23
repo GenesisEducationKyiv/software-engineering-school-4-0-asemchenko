@@ -3,7 +3,7 @@ package messaging
 import (
 	"currency-notifier/internal/shared/api"
 	"encoding/json"
-	"log"
+	"go.uber.org/zap"
 )
 
 type ConsumerController interface {
@@ -29,7 +29,7 @@ func (c *consumerController) StartConsuming(queueName string) {
 	c.rabbitMqClient.DeclareQueue(queueName)
 	messagesChannel, err := c.rabbitMqClient.Consume(queueName)
 	if err != nil {
-		log.Fatalf("Failed to consume messages: %v", err)
+		zap.S().Fatalf("Failed to consume messages: %v", err)
 	}
 
 	for msg := range messagesChannel {
@@ -42,7 +42,7 @@ func (c *consumerController) Consume(message []byte) {
 	var msg api.Message
 	err := json.Unmarshal(message, &msg)
 	if err != nil {
-		log.Printf("Failed to parse message: %v", err)
+		zap.S().Warnf("Failed to parse message: %v", err)
 		return
 	}
 

@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"gopkg.in/gomail.v2"
-	"log"
 	"os"
 	"strconv"
 )
@@ -53,7 +53,7 @@ func (s *EmailService) SendCurrencyRateEmail(to string, rate float64) error {
 }
 
 func (s *EmailService) sendEmail(to string, subject string, plainTextContent string, htmlContent string) error {
-	log.Printf("Sending email to %s", to)
+	zap.S().Debugf("Sending email to %s", to)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", s.From)
@@ -66,7 +66,7 @@ func (s *EmailService) sendEmail(to string, subject string, plainTextContent str
 		return fmt.Errorf("could not send email to %s: %w", to, err)
 	}
 
-	log.Printf("Email sent to %s", to)
+	zap.S().Debugf("Email sent to %s", to)
 
 	return nil
 }

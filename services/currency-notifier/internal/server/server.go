@@ -5,7 +5,7 @@ import (
 	"currency-notifier/internal/controller"
 	"github.com/gorilla/mux"
 	httpSwagger "github.com/swaggo/http-swagger"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -36,6 +36,6 @@ func (s *Server) RegisterRoutes() {
 }
 
 func (s *Server) StartListening() {
-	log.Println("Server started at :8080")
-	log.Fatal(http.ListenAndServe(":8080", s.router))
+	zap.S().Info("Server started at :8080")
+	zap.S().Fatal(http.ListenAndServe(":8080", s.router))
 }

@@ -12,7 +12,7 @@ import (
 	"currency-notifier/internal/shared/db"
 	"currency-notifier/internal/shared/util"
 	"github.com/robfig/cron/v3"
-	"log"
+	"go.uber.org/zap"
 )
 
 type AppContext struct {
@@ -54,7 +54,7 @@ func (ctx *AppContext) Init() {
 		util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/"),
 	)
 	ctx.MessagePublisher.Connect()
-	log.Printf("Connected to RabbitMQ")
+	zap.S().Info("Connected to RabbitMQ")
 	ctx.RateUpdatePublisher = messaging.NewRatePublisher(
 		ctx.MessagePublisher,
 		getSubscriptionManagementQueue(),
@@ -68,7 +68,7 @@ func (ctx *AppContext) Init() {
 		ctx.MessagePublisher,
 		ctx.SubscriptionStatusListener,
 	)
-	log.Printf("Start listening subscription status messages")
+	zap.S().Info("Start listening subscription status messages")
 	go ctx.ConsumerController.StartConsuming(getSubscriptionStatusQueue())
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
@@ -89,7 +89,7 @@ func (ctx *AppContext) Init() {
 
 	err := ctx.CurrencyService.Init()
 	if err != nil {
-		log.Fatal("Error initializing currency service: ", err)
+		zap.S().Fatal("Error initializing currency service: ", err)
 	}
 
 	ctx.initCron()
@@ -105,7 +105,7 @@ func (ctx *AppContext) initCron() {
 
 	_, err := ctx.cronInstance.AddFunc("@hourly", ctx.UpdateRateJob.UpdateExchangeRate)
 	if err != nil {
-		log.Fatal(err)
+		zap.S().Fatal("Failed to add update rate cron job", err)
 	}
 
 	ctx.cronInstance.Start()

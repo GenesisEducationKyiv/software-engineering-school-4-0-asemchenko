@@ -1,19 +1,19 @@
 package util
 
 import (
+	"go.uber.org/zap"
 	"io"
-	"log"
 )
 
 func CloseBodyWithErrorHandling(Body io.ReadCloser) {
 	err := Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		zap.S().Warnf("Failed to close HTTP request body %v", err)
 	}
 }
 
 func WarnOnError(err error) {
 	if err != nil {
-		log.Println(err)
+		zap.S().Warn(err)
 	}
 }
