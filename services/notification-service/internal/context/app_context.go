@@ -1,15 +1,16 @@
 package context
 
 import (
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/db"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
 	"github.com/robfig/cron/v3"
 	"log"
 	"notification-service/internal/consumers"
 	"notification-service/internal/jobs"
 	"notification-service/internal/messaging"
+	"notification-service/internal/publishers"
 	"notification-service/internal/repository"
 	"notification-service/internal/service"
+	"notification-service/internal/shared/db"
+	"notification-service/internal/shared/util"
 )
 
 type AppContext struct {
@@ -24,7 +25,10 @@ type AppContext struct {
 
 	rateStorage service.RateStorage
 
-	rabbitMqConsumer           *messaging.RabbitMQConsumer
+	rabbitMqClient *messaging.RabbitMqClient
+
+	subscriptionStatusPublisher publishers.SubscriptionStatusPublisher
+
 	rateUpdateConsumer         *consumers.RateUpdateConsumer
 	addSubscriptionConsumer    consumers.AddSubscriptionConsumer
 	removeSubscriptionConsumer consumers.RemoveSubscriptionConsumer
@@ -50,16 +54,28 @@ func (ctx *AppContext) Init() {
 
 	ctx.rateStorage = service.NewRateStorage()
 
-	ctx.rabbitMqConsumer = messaging.NewRabbitMQConsumer(getRabbitMQConfig())
-	err := ctx.rabbitMqConsumer.Connect()
+	ctx.rabbitMqClient = messaging.NewRabbitMQConsumer(getRabbitMQConnectionUrl())
+	err := ctx.rabbitMqClient.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
 	log.Printf("Connected to RabbitMQ")
+
+	ctx.subscriptionStatusPublisher = publishers.NewSubscriptionPublisher(
+		ctx.rabbitMqClient,
+		getSubscriptionStatusQueue(),
+	)
+
 	ctx.rateUpdateConsumer = consumers.NewRateUpdateConsumer(ctx.rateStorage)
-	ctx.addSubscriptionConsumer = consumers.NewAddSubscriptionConsumer(ctx.subscriptionService)
+	ctx.addSubscriptionConsumer = consumers.NewAddSubscriptionConsumer(ctx.subscriptionService, ctx.subscriptionStatusPublisher)
 	ctx.removeSubscriptionConsumer = consumers.NewRemoveSubscriptionConsumer(ctx.subscriptionService)
-	ctx.consumerController = consumers.NewConsumerController(ctx.rabbitMqConsumer, ctx.rateUpdateConsumer, ctx.addSubscriptionConsumer, ctx.removeSubscriptionConsumer)
+	ctx.consumerController = consumers.NewConsumerController(
+		ctx.rabbitMqClient,
+		ctx.rateUpdateConsumer,
+		ctx.addSubscriptionConsumer,
+		ctx.removeSubscriptionConsumer,
+		getSubscriptionManagementQueue(),
+	)
 
 	ctx.consumerController.StartConsuming()
 
@@ -71,7 +87,7 @@ func (ctx *AppContext) Init() {
 func (ctx *AppContext) Close() {
 	ctx.db.Close()
 	ctx.cronInstance.Stop()
-	err := ctx.rabbitMqConsumer.Close()
+	err := ctx.rabbitMqClient.Close()
 	if err != nil {
 		log.Printf("Failed to close RabbitMQ connection: %v", err)
 	}
@@ -99,9 +115,14 @@ func (ctx *AppContext) initCron() {
 	ctx.cronInstance.Start()
 }
 
-func getRabbitMQConfig() messaging.RabbitMQCredentials {
-	return messaging.RabbitMQCredentials{
-		Url:       util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/"),
-		QueueName: util.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
-	}
+func getRabbitMQConnectionUrl() string {
+	return util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/")
+}
+
+func getSubscriptionManagementQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_MANAGEMENT_QUEUE_NAME", "currency-notifier-subscription-management")
+}
+
+func getSubscriptionStatusQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE_NAME", "currency-notifier-subscription-status")
 }

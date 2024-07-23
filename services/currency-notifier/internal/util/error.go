@@ -11,3 +11,9 @@ func CloseBodyWithErrorHandling(Body io.ReadCloser) {
 		log.Fatal(err)
 	}
 }
+
+func WarnOnError(err error) {
+	if err != nil {
+		log.Println(err)
+	}
+}

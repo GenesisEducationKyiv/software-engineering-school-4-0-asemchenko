@@ -50,8 +50,8 @@ func (r *SubscriptionRepository) GetAllActiveSubscriptions() ([]models.Subscript
 	return subscriptions, nil
 }
 
-func (r *SubscriptionRepository) DeactivateSubscription(userId uuid.UUID) error {
-	query := "UPDATE subscriptions SET is_active=$1 WHERE id=$2"
-	_, err := r.DB.Exec(query, false, userId.String())
+func (r *SubscriptionRepository) RemoveSubscription(userId uuid.UUID) error {
+	query := "DELETE FROM subscriptions WHERE id=$1"
+	_, err := r.DB.Exec(query, userId.String())
 	return err
 }

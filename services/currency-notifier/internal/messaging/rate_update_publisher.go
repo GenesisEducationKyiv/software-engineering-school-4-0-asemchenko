@@ -1,18 +1,21 @@
 package messaging
 
 import (
+	"currency-notifier/internal/shared/api"
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"log"
 )
 
 type RatePublisher struct {
-	rabbitMqPublisher *RabbitMQPublisher
+	rabbitMqPublisher *RabbitMqClient
+	queueName         string
 }
 
-func NewRatePublisher(publisher *RabbitMQPublisher) *RatePublisher {
+func NewRatePublisher(publisher *RabbitMqClient, queueName string) *RatePublisher {
+	publisher.DeclareQueue(queueName)
 	return &RatePublisher{
 		rabbitMqPublisher: publisher,
+		queueName:         queueName,
 	}
 }
 
@@ -39,5 +42,5 @@ func (p *RatePublisher) PublishRateUpdated(usdUahRate float64) error {
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody)
+	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
 }

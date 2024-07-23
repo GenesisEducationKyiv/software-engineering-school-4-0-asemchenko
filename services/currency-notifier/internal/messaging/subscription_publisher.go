@@ -1,8 +1,8 @@
 package messaging
 
 import (
+	"currency-notifier/internal/shared/api"
 	"encoding/json"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/api"
 	"github.com/google/uuid"
 )
 
@@ -12,12 +12,15 @@ type SubscriptionPublisher interface {
 }
 
 type subscriptionPublisher struct {
-	rabbitMqPublisher *RabbitMQPublisher
+	rabbitMqPublisher *RabbitMqClient
+	queueName         string
 }
 
-func NewSubscriptionPublisher(publisher *RabbitMQPublisher) SubscriptionPublisher {
+func NewSubscriptionPublisher(publisher *RabbitMqClient, queueName string) SubscriptionPublisher {
+	publisher.DeclareQueue(queueName)
 	return &subscriptionPublisher{
 		rabbitMqPublisher: publisher,
+		queueName:         queueName,
 	}
 }
 
@@ -42,7 +45,7 @@ func (p *subscriptionPublisher) PublishAddSubscription(id uuid.UUID, email strin
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody)
+	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
 }
 
 func (p *subscriptionPublisher) PublishRemoveSubscription(id uuid.UUID) error {
@@ -65,5 +68,5 @@ func (p *subscriptionPublisher) PublishRemoveSubscription(id uuid.UUID) error {
 		return err
 	}
 
-	return p.rabbitMqPublisher.PublishMessage(messageBody)
+	return p.rabbitMqPublisher.PublishMessage(messageBody, p.queueName)
 }

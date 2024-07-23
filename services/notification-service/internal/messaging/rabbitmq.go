@@ -2,59 +2,50 @@ package messaging
 
 import (
 	"github.com/streadway/amqp"
+	"log"
 )
 
-type RabbitMQCredentials struct {
-	Url       string
-	QueueName string
+type RabbitMqClient struct {
+	Conn          *amqp.Connection
+	Channel       *amqp.Channel
+	ConnectionUrl string
 }
 
-type RabbitMQConsumer struct {
-	Conn        *amqp.Connection
-	Channel     *amqp.Channel
-	Credentials RabbitMQCredentials
-}
-
-func NewRabbitMQConsumer(credentials RabbitMQCredentials) *RabbitMQConsumer {
-	return &RabbitMQConsumer{
-		Credentials: credentials,
+func NewRabbitMQConsumer(connectionUrl string) *RabbitMqClient {
+	return &RabbitMqClient{
+		ConnectionUrl: connectionUrl,
 	}
 }
 
-func (r *RabbitMQConsumer) Connect() error {
-	conn, err := amqp.Dial(r.Credentials.Url)
+func (c *RabbitMqClient) Connect() error {
+	conn, err := amqp.Dial(c.ConnectionUrl)
 	if err != nil {
 		return err
 	}
-	r.Conn = conn
+	c.Conn = conn
 
-	ch, err := r.Conn.Channel()
+	ch, err := c.Conn.Channel()
 	if err != nil {
 		return err
 	}
-	r.Channel = ch
-
-	err = r.DeclareQueue()
-	if err != nil {
-		return err
-	}
+	c.Channel = ch
 
 	return nil
 }
 
-func (r *RabbitMQConsumer) Close() error {
-	if r.Channel != nil {
-		err := r.Channel.Close()
+func (c *RabbitMqClient) Close() error {
+	if c.Channel != nil {
+		err := c.Channel.Close()
 		if err != nil {
 			return err
 		}
 	}
-	return r.Conn.Close()
+	return c.Conn.Close()
 }
 
-func (r *RabbitMQConsumer) DeclareQueue() error {
-	_, err := r.Channel.QueueDeclare(
-		r.Credentials.QueueName,
+func (c *RabbitMqClient) DeclareQueue(queueName string) error {
+	_, err := c.Channel.QueueDeclare(
+		queueName,
 		true,
 		false,
 		false,
@@ -64,9 +55,28 @@ func (r *RabbitMQConsumer) DeclareQueue() error {
 	return err
 }
 
-func (r *RabbitMQConsumer) Consume() (<-chan amqp.Delivery, error) {
-	messagesChannel, err := r.Channel.Consume(
-		r.Credentials.QueueName,
+func (c *RabbitMqClient) PublishMessage(messageBody []byte, queueName string) error {
+	err := c.Channel.Publish(
+		"",
+		queueName,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        messageBody,
+		},
+	)
+	if err != nil {
+		log.Printf("Failed to publish message: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *RabbitMqClient) Consume(queueName string) (<-chan amqp.Delivery, error) {
+	messagesChannel, err := c.Channel.Consume(
+		queueName,
 		"",
 		true,
 		false,

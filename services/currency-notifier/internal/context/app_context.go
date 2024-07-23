@@ -9,8 +9,8 @@ import (
 	"currency-notifier/internal/service/rate_provider/monobank"
 	"currency-notifier/internal/service/rate_provider/nbu"
 	"currency-notifier/internal/service/rate_provider/privatbank"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/db"
-	"github.com/GenesisEducationKyiv/software-engineering-school-4-0-asemchenko/shared/util"
+	"currency-notifier/internal/shared/db"
+	"currency-notifier/internal/shared/util"
 	"github.com/robfig/cron/v3"
 	"log"
 )
@@ -22,9 +22,11 @@ type AppContext struct {
 	UserRepository *repository.UserRepository
 	RateRepository *repository.ExchangeRateRepository
 
-	MessagePublisher      *messaging.RabbitMQPublisher
-	RateUpdatePublisher   *messaging.RatePublisher
-	SubscriptionPublisher messaging.SubscriptionPublisher
+	MessagePublisher           *messaging.RabbitMqClient
+	RateUpdatePublisher        *messaging.RatePublisher
+	SubscriptionPublisher      messaging.SubscriptionPublisher
+	ConsumerController         messaging.ConsumerController
+	SubscriptionStatusListener messaging.SubscriptionStatusListener
 
 	MonobankRateProvider   rate_provider.RateProvider
 	PrivatBankRateProvider rate_provider.RateProvider
@@ -48,14 +50,26 @@ func (ctx *AppContext) Init() {
 
 	ctx.UserRepository = repository.NewUserRepository(ctx.db.Get())
 	ctx.RateRepository = repository.NewExchangeRateRepository(ctx.db.Get())
-	ctx.MessagePublisher = messaging.NewRabbitMQPublisher(
+	ctx.MessagePublisher = messaging.NewRabbitMqClient(
 		util.GetEnv("RABBITMQ_URL", "amqp://username:password@localhost:5672/"),
-		util.GetEnv("RABBITMQ_QUEUE_NAME", "email"),
 	)
 	ctx.MessagePublisher.Connect()
 	log.Printf("Connected to RabbitMQ")
-	ctx.RateUpdatePublisher = messaging.NewRatePublisher(ctx.MessagePublisher)
-	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(ctx.MessagePublisher)
+	ctx.RateUpdatePublisher = messaging.NewRatePublisher(
+		ctx.MessagePublisher,
+		getSubscriptionManagementQueue(),
+	)
+	ctx.SubscriptionPublisher = messaging.NewSubscriptionPublisher(
+		ctx.MessagePublisher,
+		getSubscriptionManagementQueue(),
+	)
+	ctx.SubscriptionStatusListener = messaging.NewSubscriptionStatusListener()
+	ctx.ConsumerController = messaging.NewConsumerController(
+		ctx.MessagePublisher,
+		ctx.SubscriptionStatusListener,
+	)
+	log.Printf("Start listening subscription status messages")
+	go ctx.ConsumerController.StartConsuming(getSubscriptionStatusQueue())
 
 	ctx.MonobankRateProvider = monobank.NewMonobankRateProvider(util.GetEnv("MONOBANK_HOST_URL", "https://api.monobank.ua"))
 	ctx.PrivatBankRateProvider = privatbank.NewPrivatBankRateProvider(util.GetEnv("PRIVAT_BANK_HOST_URL", "https://api.privatbank.ua"))
@@ -67,7 +81,7 @@ func (ctx *AppContext) Init() {
 		ctx.NbuRateProvider,
 	)
 
-	ctx.UserService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher)
+	ctx.UserService = service.NewUserService(ctx.UserRepository, ctx.SubscriptionPublisher, ctx.SubscriptionStatusListener)
 	ctx.CurrencyService = service.NewCurrencyService(ctx.RateRepository, ctx.AggregatedRateProvider)
 	ctx.CurrencyService.AddSubscriber(ctx.RateUpdatePublisher)
 
@@ -101,9 +115,17 @@ func getDbConfig() db.DbConfig {
 	return db.DbConfig{
 		Host:     util.GetEnv("DB_HOST", "localhost"),
 		Port:     util.GetEnv("DB_PORT", "5432"),
-		User:     util.GetEnv("DB_USER", "postgres"),
-		Password: util.GetEnv("DB_PASSWORD", "postgres"),
+		User:     util.GetEnv("DB_USER", "root"),
+		Password: util.GetEnv("DB_PASSWORD", "password"),
 		Name:     util.GetEnv("DB_NAME", "currency_notifier"),
 		SSLMode:  util.GetEnv("DB_SSLMODE", "disable"),
 	}
+}
+
+func getSubscriptionManagementQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_MANAGEMENT_QUEUE_NAME", "currency-notifier-subscription-management")
+}
+
+func getSubscriptionStatusQueue() string {
+	return util.GetEnv("RABBITMQ_SUBSCRIPTION_STATUS_QUEUE_NAME", "currency-notifier-subscription-status")
 }
